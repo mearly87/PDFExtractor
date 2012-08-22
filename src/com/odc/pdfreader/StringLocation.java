@@ -1,4 +1,4 @@
-package com.odc.pdfreader.xml;
+package com.odc.pdfreader;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.odc.pdfreader.xml.Location.ALIGNMENT;
+import com.odc.pdfreader.Location.ALIGNMENT;
 
 public class StringLocation implements Location
 {
@@ -83,10 +83,15 @@ public class StringLocation implements Location
         if (l instanceof StringLocation) {
           if (looseChars != null) {
             result.add(looseChars);
+            looseChars = null;
           }
           result.add((StringLocation) l);
         } else {
-          looseChars.addLocation(l);
+          if (looseChars == null) {
+            looseChars = new StringLocation(l);
+          } else {
+            looseChars.addLocation(l);
+          }
         }
       }
       if (looseChars != null) {

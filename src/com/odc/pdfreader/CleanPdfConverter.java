@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.odc.pdfreader.xml;
+package com.odc.pdfreader;
 
 import org.apache.pdfbox.exceptions.InvalidPasswordException;
 
