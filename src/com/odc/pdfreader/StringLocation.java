@@ -227,7 +227,7 @@ public class StringLocation implements Location
           }
           
           // If result contains this header already, it is a table with horizontal duplication
-          // Either return this set of headers, or start a new set depending on if loc is in this set
+          // Either return this set of headers, or start a new set depending on if text is in this set
           if (((StringLocation) result).containsString(l.toString().trim())) {
             if (result.getLeft() <= loc.getLeft() && result.getRight() >= loc.getRight()) {
               return result;
@@ -285,4 +285,19 @@ public class StringLocation implements Location
       return result;
     }
    
+    public boolean empty() {
+      return page == -1;
+    }
+    
+    public boolean isAbove(Location loc) {
+      return isAbove(loc, 0);
+    }
+    
+    public boolean isAbove(Location loc, int error) {
+      return this.getBottom() + error <= loc.getTop();
+    }
+    
+    public boolean matches(String regex) {
+      return this.toString().trim().matches(regex);
+    }
 }

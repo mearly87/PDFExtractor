@@ -37,14 +37,10 @@ import java.util.List;
  * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
  * @version $Revision: 1.7 $
  */
-public class CleanPdfConverter extends PDFTextStripper
+public class CleanPdfConverter extends PDFTextStripper implements PdfConverter
 {
-    private StringLocation word;
-    private StringLocation text;
-    private StringLocation page;
-    private DocumentLocation doc;
-    private int pageNumber = 0;
-    
+    private DocumentBuilder docBuilder = new DocumentBuilder(1);
+
     /**
      * Default constructor.
      *
@@ -56,17 +52,16 @@ public class CleanPdfConverter extends PDFTextStripper
     }
 
     /**
-     * This will print the documents data.
+     * This will print the documents docBuilder.
      *
      * @param args The command line arguments.
      *
      * @throws Exception If there is an error parsing the document.
      */
-    public DocumentLocation processCleanPdf(String filename) throws Exception
+    public DocumentLocation processPdf(String filename) throws Exception
     {
 
           PDDocument document = null;
-          doc = new DocumentLocation();
           try
           {
               document = PDDocument.load( filename );
@@ -86,18 +81,6 @@ public class CleanPdfConverter extends PDFTextStripper
               System.out.print("Extracting text from PDF");
               for( int i=0; i<allPages.size(); i++ )
               {
-                if (page != null) {
-                  if (text != null) {
-                    if (word != null) {
-                      text.addLocation(word);
-                    }
-                    page.addLocation(text);
-                  }
-                  doc.addLocation(page);
-                }
-                text = new StringLocation();
-                word = new StringLocation();
-                page = new StringLocation();
                   PDPage page = (PDPage)allPages.get( i );
                   System.out.print( ".");
                   PDStream contents = page.getContents();
@@ -105,7 +88,7 @@ public class CleanPdfConverter extends PDFTextStripper
                   {
                       this.processStream( page, page.findResources(), page.getContents().getStream() );
                   }
-                  pageNumber++;
+                  docBuilder.incrementPage();
               }
           }
           finally
@@ -117,66 +100,27 @@ public class CleanPdfConverter extends PDFTextStripper
               }
           }
           // System.out.println(doc);
-          doc.sort();
-          return doc;
+          docBuilder.getDoc().sort();
+          return docBuilder.getDoc();
     }
 
     /**
      * A method provided as an event interface to allow a subclass to perform
      * some specific functionality when text needs to be processed.
      *
-     * @param text The text to be processed
+     * @param docBuilder.text The text to be processed
      */
     protected void processTextPosition( TextPosition textPos )
     {
-      String character = textPos.getCharacter();
+      char character = textPos.getCharacter().charAt(0);
       int x = Math.round(textPos.getX());
       int width = Math.round(textPos.getWidth());
       int y = Math.round(textPos.getY());
       int height = Math.round(textPos.getHeight());
-      if (character.trim().isEmpty()) {
-        if (word != null) {
-          if (word.getPage() != -1)
-            if (word.toString().trim().matches(Constants.dateRegEx) || word.toString().trim().matches(Constants.amountRegEx)) {
-              page.addLocation(text);
-              page.addLocation(word);
-              text = new StringLocation();
-            } else {
-              text.addLocation(word);
-            }
-        }
-        word = new StringLocation();
-        return;
-      }
-      if (word.getPage() == -1 && text.getBottom() < y) {
-        page.addLocation(text);
-        text = new StringLocation();
-      } else if (word.getPage() == -1 && text.getTop() > y + height) {
-        page.addLocation(text);
-        text = new StringLocation();
-      } else if (word.getPage() != -1 && word.getBottom() < y) {
-        text.addLocation(word);
-        page.addLocation(text);
-        text = new StringLocation();
-        word = new StringLocation();
-      } else if (word.getPage() != -1 && word.getTop() > y + height) {
-        text.addLocation(word);
-        page.addLocation(text);
-        text = new StringLocation();
-        word = new StringLocation();
-      }
-      else if (word.getPage() != -1 && word.getRight() + 1 < x) {
-          text.addLocation(word);
-          page.addLocation(text);
-          text = new StringLocation();
-          word = new StringLocation();
-      }
-      Location location = new CharacterLocation(x,
-      x + width,
-      y,
-      y + height,
-      pageNumber, character.charAt(0));
-      word.addLocation(location);
+      int bottom = y + height;
+      int right = x + width;
+      CharacterLocation charLoc = new CharacterLocation(x, right, y, bottom, docBuilder.getPage(), character);
+      docBuilder.addCharacter(charLoc);
     }
 
     /**

@@ -127,10 +127,8 @@ public class DocumentLocation implements Location
       Pattern date2 = Pattern.compile(regEx);
       Matcher matcher = date2.matcher(this.toString());
       List<StringLocation> locs = new ArrayList<StringLocation>();
-      // System.out.println(this.toString());
       while(matcher.find()) {
         StringLocation loc = substring(matcher.start(), matcher.end());
-        // System.out.println(this.toString().substring(matcher.start(), matcher.end()) + " : " + loc.toString());
         if (loc != null) {
           locs.add(loc);
         }
@@ -208,6 +206,14 @@ public class DocumentLocation implements Location
       for (StringLocation loc : locations) {
         loc.sort();
       }
+    }
+    
+    public boolean isAbove(Location loc) {
+      return this.getBottom() <= loc.getTop();
+    }
+    
+    public boolean matches(String regex) {
+      return this.toString().trim().matches(regex);
     }
 
 }

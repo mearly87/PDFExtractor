@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
@@ -12,6 +13,7 @@ public class PdfExtractor
 {
   
   public static void main(String[] args) throws Exception {
+
     String filename = null;
     if (args.length > 0) {
       filename = args[0];
@@ -19,18 +21,29 @@ public class PdfExtractor
       System.out.println("Enter filename of PDF:");
       BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
       filename = br.readLine();
-      if (!filename.toLowerCase().endsWith(".pdf")) {
-        System.out.println("File must be of extension type .pdf");
+      if (!filename.toLowerCase().endsWith(".pdf") && !filename.toLowerCase().endsWith(".xml")) {
+        System.out.println("File must be of extension type .pdf or .xml: " + filename);
         return;
       }
     }
+    Calendar startTime = Calendar.getInstance();
+    long start = startTime.getTimeInMillis();
     printTransactions(filename);
+    Calendar endTime = Calendar.getInstance();
+    long end = endTime.getTimeInMillis();
+    System.out.println("Retrieved in " + (double) ((end - start)) / 1000 + " seconds");
   }
 
   private static void printTransactions(String filename) throws IOException, Exception
   {
-    CleanPdfConverter converter = new CleanPdfConverter();
-    DocumentLocation doc = converter.processCleanPdf(filename);
+    PdfConverter converter;
+    if (filename.toLowerCase().endsWith(".pdf")) {
+      converter = new CleanPdfConverter();
+
+    } else {
+      converter = new DirtyPdfConverter();
+    }
+    DocumentLocation doc = converter.processPdf(filename);
     converter = null;
     
     List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
@@ -47,6 +60,7 @@ public class PdfExtractor
       List<StringLocation> dates = dateColumn.getLineLocations();
       transactions.addAll(StringLocationHelper.getTransactions(tableName, headerToDataCol, dates));
     }
+
     System.out.println("# of Transactions: " + transactions.size());
   }
 }

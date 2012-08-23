@@ -102,4 +102,16 @@ public class CharacterLocation implements Location {
    // Already Sorted
     
   }
+  
+  public boolean isAbove(Location loc) {
+    return isAbove(loc, 0);
+  }
+  
+  public boolean isAbove(Location loc, int error) {
+    return this.getBottom() + error <= loc.getTop() && this.getBottom() <= loc.getTop() + error;
+  }
+  
+  public boolean matches(String regex) {
+    return String.valueOf(character).matches(regex);
+  }
 }

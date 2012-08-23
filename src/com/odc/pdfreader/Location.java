@@ -35,4 +35,8 @@ public interface Location
   void sort();
   
   Location substring(int start, int end);
+  
+  boolean isAbove(Location loc);
+  
+  boolean matches(String RegEx);
 }
