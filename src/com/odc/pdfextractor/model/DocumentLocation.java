@@ -1,4 +1,4 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,7 +6,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.odc.pdfreader.Location.ALIGNMENT;
+import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.Location.ALIGNMENT;
+import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
 public class DocumentLocation implements Location
 {
@@ -40,7 +42,7 @@ public class DocumentLocation implements Location
     
     public String fullPrint() {
       StringBuilder word = new StringBuilder();
-      for (Location loc : locations) {
+      for (ImmutableLocation loc : locations) {
         word.append(loc.fullPrint());
       }
       return word.toString() + "(page: " + pages.get(0) + "-" + pages.get(pages.size() - 1) + ", left: " + left + ", right: " + right + ", top: " + top + ", bottom: " + bottom + ")\n";
@@ -137,11 +139,11 @@ public class DocumentLocation implements Location
     }
     
     public StringLocation substring(int start, int end) {
-      StringLocation result = new StringLocation();
+      StringLocationBuilder result = new StringLocationBuilder();
       int charPointer = 0;
-      for (Location loc : locations) { 
+      for (ImmutableLocation loc : locations) { 
         if (start >= end) {
-          return result;
+          return result.toLocation();
         }
         if (start <= charPointer && charPointer < end || 
             start < charPointer + loc.size() && charPointer + loc.size() < end || 
@@ -149,14 +151,14 @@ public class DocumentLocation implements Location
           int endIndex = Math.min(loc.size(), end - charPointer);
           int startIndex = start - charPointer;
 
-          Location newLoc = loc.substring(startIndex, endIndex);
+          ImmutableLocation newLoc = loc.substring(startIndex, endIndex);
           result.addLocation(newLoc);
           start = start + newLoc.size();
         } 
         charPointer = charPointer + loc.size();
       }
       
-      return result;
+      return result.toLocation();
     }
 
     public void addLocations(List<StringLocation> locations)
@@ -177,10 +179,9 @@ public class DocumentLocation implements Location
     }
     
     public StringLocation getLocation(int page, int lower, int upper, Location.ALIGNMENT alignment) {
-      StringLocation result = new StringLocation();
       for (StringLocation l : locations) {
         if (page != -1 && l.getPage() == page)
-            return (StringLocation) l.getLocation(lower, upper, alignment);
+            return l.getLocation(lower, upper, alignment);
       }
       return null;
     }
@@ -190,7 +191,7 @@ public class DocumentLocation implements Location
       return left < x && x < right && bottom < y && y < top;
     }
 
-    public StringLocation getUniqueLocation(int page, int lower, int upper, ALIGNMENT alignment, Location loc)
+    public StringLocation getUniqueLocation(int page, int lower, int upper, Location.ALIGNMENT alignment, ImmutableLocation loc)
     {
       for (StringLocation l : locations) {
         if (page != -1 && l.getPage() == page) {
@@ -199,16 +200,8 @@ public class DocumentLocation implements Location
       }
       return null;
     }
-
-    @Override
-    public void sort()
-    {
-      for (StringLocation loc : locations) {
-        loc.sort();
-      }
-    }
     
-    public boolean isAbove(Location loc) {
+    public boolean isAbove(ImmutableLocation loc) {
       return this.getBottom() <= loc.getTop();
     }
     

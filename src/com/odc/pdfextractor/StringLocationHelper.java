@@ -1,4 +1,4 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -6,6 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.ImmutableLocation;
+import com.odc.pdfextractor.model.StringLocation;
+import com.odc.pdfextractor.model.builder.LocationBuilder;
+import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
 public class StringLocationHelper
 {
@@ -49,7 +55,7 @@ public class StringLocationHelper
     data = data.getLocation(headers.getLeft() - 3, headers.getRight() + 3, Location.ALIGNMENT.horizontalCenter);
     
     for (StringLocation header : headers.getLineLocations()) {
-     // StringLocation colDataLocation = data.getLocation(header.getLeft() - 5, header.getRight() + 5, Location.ALIGNMENT.left);
+     // StringLocation colDataLocation = data.getLocation(header.getLeft() - 5, header.getRight() + 5, ImmutableLocation.ALIGNMENT.left);
      StringLocation colDataLocation = data.getLocationUnder(header);
      headerToDataCol.put(header, colDataLocation);
     }
@@ -59,28 +65,26 @@ public class StringLocationHelper
   public static StringLocation getHeaders(DocumentLocation data, StringLocation dateColumn) {
 
     List<StringLocation> dateLocs = dateColumn.getLineLocations();
-    Location dateHeader = dateLocs.get(0);
-    Location firstDate = dateLocs.get(0);
+    ImmutableLocation dateHeader = dateLocs.get(0);
+    ImmutableLocation firstDate = dateLocs.get(0);
     if (dateLocs.size() > 1)
       firstDate = dateLocs.get(1);
     return data.getUniqueLocation(dateHeader.getPage(), dateHeader.getTop() - 10, firstDate.getTop(), Location.ALIGNMENT.verticalCenter, dateHeader);
   }
 
   public static List<StringLocation> getDateColumns(DocumentLocation doc, String regEx,
-      Map<Integer, List<StringLocation>> locsMap)
+      List<StringLocation> locations)
   {
     List<StringLocation> dateCols = new ArrayList<StringLocation>();
-    for (List<StringLocation> page : locsMap.values()) {
-      for (Location loc : page) {
-        int left = loc.getLeft();
-        List<StringLocation> locs = doc.getLocations(loc.getPage(), left - 10, left + 10, Location.ALIGNMENT.left);
-        dateCols.addAll(cleanColumn("(D|d)(A|a)(T|t)(E|e)", regEx, locs));
-      }
+    for (StringLocation loc : locations) {
+      int left = loc.getLeft();
+      List<StringLocation> locs = doc.getLocations(loc.getPage(), left - 10, left + 10, Location.ALIGNMENT.left);
+      dateCols.addAll(cleanColumn("(D|d)(A|a)(T|t)(E|e)", regEx, locs));
     }
     return dateCols;
   }
 
-  public static void putInBucket(final Map<Integer, List<Location>> boxes, Location loc, int error, Location.ALIGNMENT alignment)
+  public static void putInBucket(final Map<Integer, List<ImmutableLocation>> boxes, ImmutableLocation loc, int error, Location.ALIGNMENT alignment)
   {
     int key = -1;
     for (int i = 0; i < error; i++) {
@@ -95,7 +99,7 @@ public class StringLocationHelper
     }
     if (key == -1) {
       key = loc.getPosition(alignment);
-      List<Location> newLocationList = new ArrayList<Location>();
+      List<ImmutableLocation> newLocationList = new ArrayList<ImmutableLocation>();
       newLocationList.add(loc);
       boxes.put(key, newLocationList);
     }
@@ -103,7 +107,7 @@ public class StringLocationHelper
       return;
     }
     int lineNums = 0;
-    for (Location l : boxes.get(key)) {
+    for (ImmutableLocation l : boxes.get(key)) {
       lineNums += l.getPosition(alignment);
     }
     float average = ((float)lineNums)/boxes.get(key).size();
@@ -111,8 +115,8 @@ public class StringLocationHelper
     if (newKey != key) {
       if(boxes.containsKey(newKey)) {
         System.out.println("KEY COLLISION");
-        List<Location> oldBox = boxes.remove(key);
-        List<Location> newBox = boxes.get(newKey);
+        List<ImmutableLocation> oldBox = boxes.remove(key);
+        List<ImmutableLocation> newBox = boxes.get(newKey);
         newBox.addAll(oldBox);
         return;
       }
@@ -121,7 +125,7 @@ public class StringLocationHelper
     }
   }
 
-  public static void putInBucketByPage(final Map<Integer, StringLocation> boxes, StringLocation loc, int error, Location.ALIGNMENT alignment)
+  public static void putInBucketByPage(final Map<Integer, StringLocationBuilder> boxes, StringLocationBuilder loc, int error, Location.ALIGNMENT alignment)
   {
     int key = -1;
     for (int i = 0; i < error; i++) {
@@ -137,7 +141,7 @@ public class StringLocationHelper
     }
     if (key == -1) {
       key = loc.getPosition(alignment);
-      List<Location> newLocationList = new ArrayList<Location>();
+      List<LocationBuilder> newLocationList = new ArrayList<LocationBuilder>();
       newLocationList.add(loc);
       boxes.put(key, loc);
     } else {
@@ -151,14 +155,14 @@ public class StringLocationHelper
     Pattern dataRegEx = Pattern.compile(data);
     
     List<StringLocation> result = new ArrayList<StringLocation>();
-    StringLocation dateCol = null;
+    StringLocationBuilder dateCol = null;
     for (StringLocation loc : locs) {
       Matcher headerMatcher = headerRegEx.matcher(loc.toString().trim());
       if (headerMatcher.matches()) {
         if (dateCol != null) {
-          result.add(dateCol);
+          result.add(dateCol.toLocation());
         }
-        dateCol = new StringLocation(loc);
+        dateCol = new StringLocationBuilder(loc);
       }
       Matcher dataMatcher = dataRegEx.matcher(loc.toString());
       if (dataMatcher.find()) {
@@ -168,23 +172,24 @@ public class StringLocationHelper
       }
     }
     if (dateCol != null) {
-      result.add(dateCol);
+      result.add(dateCol.toLocation());
     } 
     return result;
   }
 
-  public static Map<Integer, List<Location>> groupItems(List<Location> locs, int error, Location.ALIGNMENT alignment) {
-  Map<Integer, List<Location>> buckets = new HashMap<Integer, List<Location>>();
-    for(Location loc : locs) {
+  public static Map<Integer, List<ImmutableLocation>> groupItems(List<ImmutableLocation> locs, int error, Location.ALIGNMENT alignment) {
+  Map<Integer, List<ImmutableLocation>> buckets = new HashMap<Integer, List<ImmutableLocation>>();
+    for(ImmutableLocation loc : locs) {
       putInBucket(buckets, loc, error, alignment);
     }
     return buckets;
   }
 
-  public static Map<Integer, List<StringLocation>> groupInlineItems(List<StringLocation> results, int error, Location.ALIGNMENT alignment)
+  public static List<StringLocation> groupInlineItems(List<StringLocation> results, int error, Location.ALIGNMENT alignment)
   {
     Map<Integer, List<StringLocation>> locsByPage = new HashMap<Integer, List<StringLocation>>();
     Map<Integer, List<StringLocation>> locsMap = new HashMap<Integer, List<StringLocation>>();
+    List<StringLocation> locations = new ArrayList<StringLocation>();
     for (StringLocation l : results) {
       if (!locsByPage.containsKey(l.getPage())) {
         locsByPage.put(l.getPage(), new ArrayList<StringLocation>());
@@ -192,14 +197,16 @@ public class StringLocationHelper
       locsByPage.get(l.getPage()).add(l);
     }
     for (List<StringLocation> locs : locsByPage.values()) {
-      Map<Integer, StringLocation> locMap = new HashMap<Integer, StringLocation>();
+      Map<Integer, StringLocationBuilder> locMap = new HashMap<Integer, StringLocationBuilder>();
       for (StringLocation location : locs) {
-        putInBucketByPage(locMap, location, error, alignment);
+        putInBucketByPage(locMap, location.toLocationBuilder(), error, alignment);
       }
-      List<StringLocation> locations = new ArrayList<StringLocation>(locMap.values());
+      for (StringLocationBuilder builder : locMap.values()) {
+        locations.add(builder.toLocation());
+      }
       locsMap.put(locs.get(0).getPage(), locations);
     }
-    return locsMap;
+    return locations;
   }
 
   private static void printTransaction(Location tableName,

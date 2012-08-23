@@ -1,4 +1,4 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -7,6 +7,12 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
+
+import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.StringLocation;
+import com.odc.pdfextractor.parser.CleanPdfParser;
+import com.odc.pdfextractor.parser.DirtyPdfParser;
+import com.odc.pdfextractor.parser.PdfParser;
 
 
 public class PdfExtractor
@@ -36,18 +42,19 @@ public class PdfExtractor
 
   private static void printTransactions(String filename) throws IOException, Exception
   {
-    PdfConverter converter;
+    PdfParser converter;
     if (filename.toLowerCase().endsWith(".pdf")) {
-      converter = new CleanPdfConverter();
+      converter = new CleanPdfParser();
 
     } else {
-      converter = new DirtyPdfConverter();
+      converter = new DirtyPdfParser();
     }
     DocumentLocation doc = converter.processPdf(filename);
+
     converter = null;
     
     List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
-    Map<Integer, List<StringLocation>> groupedDates = StringLocationHelper.groupInlineItems(dateLocations, 2, Location.ALIGNMENT.left);
+    List<StringLocation> groupedDates = StringLocationHelper.groupInlineItems(dateLocations, 2, Location.ALIGNMENT.left);
     List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, Constants.dateRegEx, groupedDates);
 
     List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();

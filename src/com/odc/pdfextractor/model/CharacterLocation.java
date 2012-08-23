@@ -1,8 +1,9 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor.model;
 
-import java.util.List;
+import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.model.builder.LocationBuilder;
 
-public class CharacterLocation implements Location {
+public class CharacterLocation implements ImmutableLocation, LocationBuilder {
   private final int right;
   private final int left;
   private final int bottom;
@@ -77,7 +78,7 @@ public class CharacterLocation implements Location {
   }
   
   @Override
-  public Location substring(int start, int end)
+  public ImmutableLocation substring(int start, int end)
   {
     if (start + size() != end) {
       throw new RuntimeException("Invalid indexes");
@@ -95,13 +96,6 @@ public class CharacterLocation implements Location {
   {
     return left < x && x < right && bottom < y && y < top;
   }
-
-  @Override
-  public void sort()
-  {
-   // Already Sorted
-    
-  }
   
   public boolean isAbove(Location loc) {
     return isAbove(loc, 0);
@@ -113,5 +107,16 @@ public class CharacterLocation implements Location {
   
   public boolean matches(String regex) {
     return String.valueOf(character).matches(regex);
+  }
+
+  @Override
+  public ImmutableLocation toLocation()
+  {
+    return this;
+  }
+  @Override
+  public LocationBuilder toLocationBuilder()
+  {
+    return this;
   }
 }

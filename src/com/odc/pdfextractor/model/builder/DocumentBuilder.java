@@ -1,22 +1,24 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor.model.builder;
+
+import com.odc.pdfextractor.Constants;
+import com.odc.pdfextractor.model.CharacterLocation;
+import com.odc.pdfextractor.model.DocumentLocation;
 
 public class DocumentBuilder
 {
   
-  
-  
-  private StringLocation word;
-  private StringLocation text;
-  private StringLocation page;
+  private StringLocationBuilder word;
+  private StringLocationBuilder text;
+  private StringLocationBuilder page;
   private DocumentLocation doc;
   private int pageNumber;
   private int error;
 
   public DocumentBuilder(int error) { 
     this.error = error;
-    word = new StringLocation();
-    text = new StringLocation();
-    page = new StringLocation();
+    word = new StringLocationBuilder();
+    text = new StringLocationBuilder();
+    page = new StringLocationBuilder();
     doc = new DocumentLocation();
   }
   
@@ -27,22 +29,20 @@ public class DocumentBuilder
           if (word.toString().trim().matches(Constants.dateRegEx) || word.toString().trim().matches(Constants.amountRegEx)) {
             page.addLocation(text);
             page.addLocation(word);
-            text = new StringLocation();
+            text = new StringLocationBuilder();
           } else {
             text.addLocation(word);
           }
       }
-      word = new StringLocation();
+      word = new StringLocationBuilder();
       return;
     }
 
     if (word.empty() && (text.isAbove(charLoc) || charLoc.isAbove(text))) {
-      // System.out.println("{word[" + word.getBottom() + "," + word.getTop()+ "] [" + charLoc.getBottom() + "," + word.getTop() + " + ]}");
       addWord();
     } else if (!word.empty() &&  (word.isAbove(charLoc) || charLoc.isAbove(word))) {
-     //  System.out.println("{word[" + word.getBottom() + "," + word.getTop()+ "] [" + charLoc.getBottom() + "," + word.getTop() + " + ]}");
       addWord();
-    } else if (word.getRight() + error < charLoc.getLeft()) {
+    } else if (!word.empty() && word.getRight() + error < charLoc.getLeft()) {
       addWord();
     }
     word.addLocation(charLoc);
@@ -52,17 +52,18 @@ public class DocumentBuilder
   {
     if (!word.empty()) {
       text.addLocation(word);
-      word = new StringLocation();
+      word = new StringLocationBuilder();
+    } if (!text.empty()) {
+      page.addLocation(text);
+      text = new StringLocationBuilder();
     }
-    page.addLocation(text);
-    text = new StringLocation();
   }
   
   public void incrementPage() {
     pageNumber++;
     addWord();
-    doc.addLocation(page);
-    page = new StringLocation();
+    doc.addLocation(page.toLocation());
+    page = new StringLocationBuilder();
   }
   
   public int getPage() {

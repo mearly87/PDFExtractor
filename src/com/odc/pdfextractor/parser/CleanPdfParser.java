@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.odc.pdfreader;
+package com.odc.pdfextractor.parser;
 
 import org.apache.pdfbox.exceptions.InvalidPasswordException;
 
@@ -24,6 +24,10 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.apache.pdfbox.util.TextPosition;
+
+import com.odc.pdfextractor.model.CharacterLocation;
+import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.builder.DocumentBuilder;
 
 import java.io.IOException;
 
@@ -37,7 +41,7 @@ import java.util.List;
  * @author <a href="mailto:ben@benlitchfield.com">Ben Litchfield</a>
  * @version $Revision: 1.7 $
  */
-public class CleanPdfConverter extends PDFTextStripper implements PdfConverter
+public class CleanPdfParser extends PDFTextStripper implements PdfParser
 {
     private DocumentBuilder docBuilder = new DocumentBuilder(1);
 
@@ -46,7 +50,7 @@ public class CleanPdfConverter extends PDFTextStripper implements PdfConverter
      *
      * @throws IOException If there is an error loading text stripper properties.
      */
-    public CleanPdfConverter() throws IOException
+    public CleanPdfParser() throws IOException
     {
         super.setSortByPosition( false );
     }
@@ -99,8 +103,6 @@ public class CleanPdfConverter extends PDFTextStripper implements PdfConverter
                   document.close();
               }
           }
-          // System.out.println(doc);
-          docBuilder.getDoc().sort();
           return docBuilder.getDoc();
     }
 

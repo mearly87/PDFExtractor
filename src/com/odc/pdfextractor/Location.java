@@ -1,10 +1,8 @@
-package com.odc.pdfreader;
-
-import java.util.List;
-
+package com.odc.pdfextractor;
 
 public interface Location
 {
+
   public enum ALIGNMENT {
     left,
     right,
@@ -13,7 +11,7 @@ public interface Location
     horizontalCenter,
     verticalCenter
   }
-
+  
   int getRight();
 
   int getLeft();
@@ -32,11 +30,6 @@ public interface Location
   
   boolean hasPoint(int x, int y);
   
-  void sort();
-  
-  Location substring(int start, int end);
-  
-  boolean isAbove(Location loc);
-  
   boolean matches(String RegEx);
+
 }

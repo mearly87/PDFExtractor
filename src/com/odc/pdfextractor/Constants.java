@@ -1,4 +1,4 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor;
 
 public class Constants
 {

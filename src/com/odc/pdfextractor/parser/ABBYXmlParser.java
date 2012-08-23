@@ -1,8 +1,12 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor.parser;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+
+import com.odc.pdfextractor.model.CharacterLocation;
+import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.builder.DocumentBuilder;
 
 
 public class ABBYXmlParser extends DefaultHandler {

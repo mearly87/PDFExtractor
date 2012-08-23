@@ -1,4 +1,4 @@
-package com.odc.pdfreader;
+package com.odc.pdfextractor.parser;
 
 import java.io.File;
 
@@ -7,7 +7,9 @@ import javax.xml.parsers.SAXParserFactory;
 
 import org.xml.sax.SAXException;
 
-public class DirtyPdfConverter implements PdfConverter
+import com.odc.pdfextractor.model.DocumentLocation;
+
+public class DirtyPdfParser implements PdfParser
 {
   
   public DocumentLocation processPdf(String filename) {
