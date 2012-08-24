@@ -280,14 +280,14 @@ public class StringLocation implements ImmutableLocation
       return this.toString().contains(substring);
     }
 
-    public StringLocation getLocationUnder(ImmutableLocation header)
+    public StringLocation getLocationUnder(ImmutableLocation header, int ignore)
     {
       StringLocationBuilder result = new StringLocationBuilder();
       for (ImmutableLocation l : locations) {
-        if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft()) {
-          result.addLocation(l);
-          continue;
-        } else if (l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight() ) {
+        if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft() || l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight()) {
+          if (ignore != -1 && l.getLeft() < ignore && ignore < l.getRight()) {
+            continue;
+          }
           result.addLocation(l);
           continue;
         }
@@ -319,5 +319,23 @@ public class StringLocation implements ImmutableLocation
         builder.addLocation(loc.toLocationBuilder());
       }
       return builder;
+    }
+
+    
+    public boolean equals(StringLocation location) {
+      return this.left == location.left & this.right == location.right && this.top == location.top && this.bottom == location.bottom;
+    }
+
+    public boolean contains(StringLocation header)
+    {
+      if (this.containsString(header.toString().trim())) {
+        return this.left <= header.left && this.top <= header.top && this.right >= header.right && this.bottom >= header.bottom;
+      }
+      return false;
+    }
+
+    public Location getFirstLcoation() 
+    {
+      return locations.get(0);
     }
 }
