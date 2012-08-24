@@ -4,7 +4,7 @@ import java.util.Comparator;
 
 import com.odc.pdfextractor.Location;
 
-public class LocationXYComparator implements Comparator<Location>
+public class LeftToRightComparator implements Comparator<Location>
 {
 
   @Override

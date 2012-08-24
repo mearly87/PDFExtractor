@@ -78,12 +78,12 @@ public class CharacterLocation implements ImmutableLocation, LocationBuilder {
   }
   
   @Override
-  public ImmutableLocation substring(int start, int end)
+  public StringLocation substring(int start, int end)
   {
     if (start + size() != end) {
       throw new RuntimeException("Invalid indexes");
     }
-    return this;
+    return new StringLocation(this);
   }
   @Override
   public String fullPrint()
@@ -114,9 +114,5 @@ public class CharacterLocation implements ImmutableLocation, LocationBuilder {
   {
     return this;
   }
-  @Override
-  public LocationBuilder toLocationBuilder()
-  {
-    return this;
-  }
+
 }
