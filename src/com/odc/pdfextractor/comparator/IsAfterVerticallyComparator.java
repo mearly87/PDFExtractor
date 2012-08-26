@@ -18,11 +18,11 @@ public class IsAfterVerticallyComparator implements Comparator<Location>
   {
     int pageDiff = loc1.getPage() - loc2.getPage();
     // boolean isBefore = loc1.getRight() + ERROR < loc2.getLeft();
-    boolean isAfter = loc1.getLeft() - 0 > loc2.getRight();
+    boolean isAfter = loc1.getLeft() - ERROR > loc2.getRight();
     if (pageDiff != 0) {
       return pageDiff;
     }
-    if (loc1.getLeft() == loc2.getLeft() && loc1.getRight() == loc2.getRight()){
+    if (loc1.getLeft() == loc2.getLeft() && loc1.getRight() == loc2.getRight()) {
       return 0;
     }
     if (isAfter) {

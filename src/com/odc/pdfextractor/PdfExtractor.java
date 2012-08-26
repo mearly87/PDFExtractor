@@ -64,7 +64,7 @@ public class PdfExtractor
       Location tableName = doc.getLocation(headers.getPage(), headers.getTop() - 15, headers.getTop(), Location.ALIGNMENT.bottom);
       
       Map<StringLocation, StringLocation> headerToDataCol = StringLocationHelper.getHeaderToDataMap(doc, dateColumn, headers);
-      List<StringLocation> dates = dateColumn.getLineLocations();
+      List<StringLocation> dates = dateColumn.getLocations();
       transactions.addAll(StringLocationHelper.getTransactions(tableName, headerToDataCol, dates));
     }
 

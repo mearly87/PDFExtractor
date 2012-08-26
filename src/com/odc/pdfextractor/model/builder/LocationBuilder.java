@@ -1,10 +1,10 @@
 package com.odc.pdfextractor.model.builder;
 
 import com.odc.pdfextractor.Location;
-import com.odc.pdfextractor.model.ImmutableLocation;
+import com.odc.pdfextractor.model.StringLocation;
 
 
 public interface LocationBuilder extends Location
 {
-  ImmutableLocation toLocation();
+  StringLocation getLocation();
 }

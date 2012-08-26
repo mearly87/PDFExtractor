@@ -1,7 +1,10 @@
 package com.odc.pdfextractor.model.builder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -9,7 +12,6 @@ import java.util.TreeSet;
 import com.odc.pdfextractor.Location;
 import com.odc.pdfextractor.comparator.TopToBottomComparator;
 import com.odc.pdfextractor.model.CharacterLocation;
-import com.odc.pdfextractor.model.ImmutableLocation;
 import com.odc.pdfextractor.model.StringLocation;
 
 public class StringLocationBuilder implements LocationBuilder
@@ -198,16 +200,22 @@ public class StringLocationBuilder implements LocationBuilder
       return this.toString().trim().matches(regex);
     }
 
-    public StringLocation toLocation()
+    public StringLocation getLocation()
     {
-      List<ImmutableLocation> stringLocations = new ArrayList<ImmutableLocation>();
+      List<StringLocation> stringLocations = new ArrayList<StringLocation>();
       for (LocationBuilder location : locations){
-        stringLocations.add(location.toLocation());
+        stringLocations.add(location.getLocation());
       }
       return new StringLocation(stringLocations);
     }
     
     public boolean containsString(String string) {
       return this.toString().contains(string);
+    }
+
+    @Override
+    public Collection<Integer> getPages()
+    {
+      return Collections.unmodifiableCollection(Arrays.asList(page));
     }
 }

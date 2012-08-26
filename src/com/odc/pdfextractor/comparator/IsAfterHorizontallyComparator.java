@@ -21,6 +21,9 @@ public class IsAfterHorizontallyComparator implements Comparator<Location>
     if (pageDiff != 0) {
       return pageDiff;
     }
+    if (loc1.getTop() == loc2.getTop() && loc1.getBottom() == loc2.getBottom()){
+      return 0;
+    }
     if (isAfter) {
       return 1;
     } 

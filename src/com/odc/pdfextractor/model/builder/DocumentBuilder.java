@@ -1,8 +1,12 @@
 package com.odc.pdfextractor.model.builder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.odc.pdfextractor.Constants;
 import com.odc.pdfextractor.model.CharacterLocation;
 import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.StringLocation;
 
 public class DocumentBuilder
 {
@@ -10,7 +14,7 @@ public class DocumentBuilder
   private StringLocationBuilder word;
   private StringLocationBuilder text;
   private StringLocationBuilder page;
-  private DocumentLocation doc;
+  private List<StringLocation> doc;
   private int pageNumber;
   private int error;
 
@@ -19,7 +23,7 @@ public class DocumentBuilder
     word = new StringLocationBuilder();
     text = new StringLocationBuilder();
     page = new StringLocationBuilder();
-    doc = new DocumentLocation();
+    doc = new ArrayList<StringLocation>();
   }
   
   public void addCharacter(CharacterLocation charLoc)
@@ -62,7 +66,7 @@ public class DocumentBuilder
   public void incrementPage() {
     pageNumber++;
     addWord();
-    doc.addLocation(page.toLocation());
+    doc.add(page.getLocation());
     page = new StringLocationBuilder();
   }
   
@@ -72,7 +76,7 @@ public class DocumentBuilder
   
   public DocumentLocation getDoc()
   {
-    return doc;
+    return new DocumentLocation(doc);
   }
   
 }

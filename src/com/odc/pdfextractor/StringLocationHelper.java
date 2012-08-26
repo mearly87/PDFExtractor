@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 import com.odc.pdfextractor.Location.ALIGNMENT;
 import com.odc.pdfextractor.comparator.IsAfterVerticallyComparator;
 import com.odc.pdfextractor.model.DocumentLocation;
-import com.odc.pdfextractor.model.ImmutableLocation;
 import com.odc.pdfextractor.model.StringLocation;
 
 public class StringLocationHelper
@@ -56,7 +55,7 @@ public class StringLocationHelper
     StringLocation data = doc.getLocation(dateColumn.getPage(), dateColumn.getTop() - 3, dateColumn.getBottom() + 3, Location.ALIGNMENT.verticalCenter);
     data = data.getLocation(headers.getLeft() - 3, headers.getRight() + 3, Location.ALIGNMENT.horizontalCenter);
     
-    for (StringLocation header : headers.getLineLocations()) {
+    for (StringLocation header : headers.getLocations()) {
      StringLocation colDataLocation = data.getLocationUnder(header);
      headerToDataCol.put(header, colDataLocation);
     }
@@ -65,9 +64,9 @@ public class StringLocationHelper
 
   public static StringLocation getHeaders(DocumentLocation data, StringLocation dateColumn) {
 
-    List<StringLocation> dateLocs = dateColumn.getLineLocations();
-    ImmutableLocation dateHeader = dateLocs.get(0);
-    ImmutableLocation firstDate = dateLocs.get(0);
+    List<StringLocation> dateLocs = dateColumn.getLocations();
+    StringLocation dateHeader = dateLocs.get(0);
+    StringLocation firstDate = dateLocs.get(0);
     if (dateLocs.size() > 1)
       firstDate = dateLocs.get(1);
     for (StringLocation l : data.getLocations()) {

@@ -46,7 +46,7 @@ public class CharacterLocation extends StringLocation implements LocationBuilder
   }
 
   @Override
-  public ImmutableLocation toLocation()
+  public StringLocation getLocation()
   {
     return this;
   }
