@@ -1,6 +1,8 @@
 package com.odc.pdfextractor;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,11 +10,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location.ALIGNMENT;
+import com.odc.pdfextractor.comparator.IsAfterVerticallyComparator;
 import com.odc.pdfextractor.model.DocumentLocation;
 import com.odc.pdfextractor.model.ImmutableLocation;
 import com.odc.pdfextractor.model.StringLocation;
-import com.odc.pdfextractor.model.builder.LocationBuilder;
-import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
 public class StringLocationHelper
 {
@@ -56,13 +57,9 @@ public class StringLocationHelper
     data = data.getLocation(headers.getLeft() - 3, headers.getRight() + 3, Location.ALIGNMENT.horizontalCenter);
     
     for (StringLocation header : headers.getLineLocations()) {
-      if (dateColumn.contains(header)) {
-        continue;
-      }
-     StringLocation colDataLocation = data.getLocationUnder(header, dateColumn.getPosition(ALIGNMENT.horizontalCenter));
+     StringLocation colDataLocation = data.getLocationUnder(header);
      headerToDataCol.put(header, colDataLocation);
     }
-    headerToDataCol.put((StringLocation) dateColumn.getFirstLcoation(), dateColumn);
     return headerToDataCol;
   }
 
@@ -73,7 +70,27 @@ public class StringLocationHelper
     ImmutableLocation firstDate = dateLocs.get(0);
     if (dateLocs.size() > 1)
       firstDate = dateLocs.get(1);
-    return data.getUniqueLocation(dateHeader.getPage(), dateHeader.getTop() - 10, firstDate.getTop(), Location.ALIGNMENT.verticalCenter, dateHeader);
+    for (StringLocation l : data.getLocations()) {
+      if (dateHeader.getPage() != -1 && l.getPage() == dateHeader.getPage()) {
+        List<StringLocation> result = l.getLocations(dateHeader.getTop(), firstDate.getTop(), ALIGNMENT.verticalCenter);
+        List<StringLocation> headers = StringLocationHelper.combineInlineItems(result, 0);
+        StringLocation firstheader = headers.get(0);
+        int start = 0;
+        int end = headers.size();
+        for (int i = 1; i < headers.size(); i++) {
+          if (firstheader.toString().equals(headers.get(i).toString())) {
+            if (dateHeader.getLeft() < headers.get(i - 1).getRight()) {
+              end = i;
+              break;
+            } else {
+              start = i;
+            }
+          }
+        }
+        return new StringLocation(headers.subList(start, end));
+      }
+    }
+    return null;
   }
 
   public static List<StringLocation> getDateColumns(DocumentLocation doc, String regEx,
@@ -88,79 +105,64 @@ public class StringLocationHelper
     return dateCols;
   }
 
-  public static void putInBucketByPage(final Map<Integer, StringLocationBuilder> boxes, StringLocationBuilder loc, int error, Location.ALIGNMENT alignment)
-  {
-    int key = -1;
-    for (int i = 0; i < error; i++) {
-      if (boxes.containsKey(loc.getPosition(alignment) - i)) {
-        boxes.get(loc.getPosition(alignment) - i).addLocation(loc);
-        key = loc.getPosition(alignment) - i;
-      }
-      else if (boxes.containsKey(loc.getPosition(alignment) + i)){
-        boxes.get(loc.getPosition(alignment) + i).addLocation(loc);
-        key = loc.getPosition(alignment) + i;
-      }
-    }
-    if (key == -1) {
-      key = loc.getPosition(alignment);
-      List<LocationBuilder> newLocationList = new ArrayList<LocationBuilder>();
-      newLocationList.add(loc);
-      boxes.put(key, loc);
-    } else {
-      boxes.get(key).addLocation(loc);
-    }
-  }
-
   public static List<StringLocation> cleanColumn(String header, String data, List<StringLocation> locs) {
     Pattern headerRegEx = Pattern.compile(header);
     
     Pattern dataRegEx = Pattern.compile(data);
     
     List<StringLocation> result = new ArrayList<StringLocation>();
-    StringLocationBuilder dateCol = null;
+    List<StringLocation> dateCol = null;
     for (StringLocation loc : locs) {
       Matcher headerMatcher = headerRegEx.matcher(loc.toString().trim());
       if (headerMatcher.matches()) {
         if (dateCol != null) {
-          result.add(dateCol.toLocation());
+          result.add(new StringLocation(dateCol));
         }
-        dateCol = new StringLocationBuilder(loc);
+        dateCol = new ArrayList<StringLocation>();
+        dateCol.add(loc);
       }
       Matcher dataMatcher = dataRegEx.matcher(loc.toString());
       if (dataMatcher.find()) {
         if (dateCol != null) {
-          dateCol.addLocation(loc);
+          dateCol.add(loc);
         }
       }
     }
     if (dateCol != null) {
-      result.add(dateCol.toLocation());
+      result.add(new StringLocation(dateCol));
     } 
     return result;
   }
+  
+  public static List<StringLocation> combineSimilarItems(List<StringLocation> items, int error) {
+    List<StringLocation> result = new ArrayList<StringLocation>();
+    Comparator<Location> isAfterComparator = new IsAfterVerticallyComparator(error);
+    Collections.sort(items, isAfterComparator);
+    List<StringLocation> buffer = new ArrayList<StringLocation>();
+    for (StringLocation loc : items) {
+      if (buffer.size() == 0) {
+        buffer.add(loc);
+      } else {
+        boolean isBefore = buffer.get(0).getRight() + error < loc.getLeft();
+        boolean isAfter = buffer.get(0).getLeft() - error > loc.getRight();
+        if (!isAfter && !isBefore) {
+          buffer.add(loc);
+        }  else {
+        result.add(new StringLocation(buffer));
+        buffer = new ArrayList<StringLocation>();
+        buffer.add(loc);
+      }
 
-  public static List<StringLocation> groupInlineItems(List<StringLocation> results, int error, Location.ALIGNMENT alignment)
-  {
-    Map<Integer, List<StringLocation>> locsByPage = new HashMap<Integer, List<StringLocation>>();
-    Map<Integer, List<StringLocation>> locsMap = new HashMap<Integer, List<StringLocation>>();
-    List<StringLocation> locations = new ArrayList<StringLocation>();
-    for (StringLocation l : results) {
-      if (!locsByPage.containsKey(l.getPage())) {
-        locsByPage.put(l.getPage(), new ArrayList<StringLocation>());
       }
-      locsByPage.get(l.getPage()).add(l);
     }
-    for (List<StringLocation> locs : locsByPage.values()) {
-      Map<Integer, StringLocationBuilder> locMap = new HashMap<Integer, StringLocationBuilder>();
-      for (StringLocation location : locs) {
-        putInBucketByPage(locMap, location.toLocationBuilder(), error, alignment);
-      }
-      for (StringLocationBuilder builder : locMap.values()) {
-        locations.add(builder.toLocation());
-      }
-      locsMap.put(locs.get(0).getPage(), locations);
+    if (buffer.size() != 0) {
+      result.add(new StringLocation(buffer));
     }
-    return locations;
+    return result;
+  }
+  
+  public static List<StringLocation> combineInlineItems(List<StringLocation> items, int error) {
+    return combineSimilarItems(items, error);
   }
 
   private static void printTransaction(Location tableName,

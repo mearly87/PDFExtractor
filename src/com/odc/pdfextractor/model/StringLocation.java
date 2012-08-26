@@ -1,12 +1,14 @@
 package com.odc.pdfextractor.model;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.StringLocationHelper;
 import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
 public class StringLocation implements ImmutableLocation
@@ -38,7 +40,7 @@ public class StringLocation implements ImmutableLocation
       locations.add(loc);
     }
     
-    public StringLocation(List<ImmutableLocation> stringLocations)
+    public StringLocation(List<? extends ImmutableLocation> stringLocations)
     {
       int size = 0;
       int left = Integer.MAX_VALUE;
@@ -82,6 +84,16 @@ public class StringLocation implements ImmutableLocation
       this.page = page;
     }
 
+    public StringLocation(int left, int right, int top, int bottom, int page, int size)
+    {
+      this.left = left;
+      this.right = right;
+      this.top = top;
+      this.bottom = bottom;
+      this.page = page;
+      this.size = size;
+    }
+
     public String toString() {
       StringBuilder word = new StringBuilder();
       for (Location loc : locations) {
@@ -120,24 +132,25 @@ public class StringLocation implements ImmutableLocation
 
     public List<StringLocation> getLineLocations() {
       List<StringLocation> result = new ArrayList<StringLocation>();
-      StringLocationBuilder looseChars = null;
+      List<ImmutableLocation> looseChars = null;
       for (ImmutableLocation l : locations) {
         if (l instanceof StringLocation) {
           if (looseChars != null) {
-            result.add(looseChars.toLocation());
+            result.add(new StringLocation(looseChars));
             looseChars = null;
           }
           result.add((StringLocation) l);
         } else {
           if (looseChars == null) {
-            looseChars = new StringLocationBuilder(l);
+            looseChars = new ArrayList<ImmutableLocation>();
+            looseChars.add(l);
           } else {
-            looseChars.addLocation(l.toLocationBuilder());
+            looseChars.add(l);
           }
         }
       }
       if (looseChars != null) {
-        result.add(looseChars.toLocation());
+        result.add(new StringLocation(looseChars));
       }
       return Collections.unmodifiableList(result);
     }
@@ -186,11 +199,11 @@ public class StringLocation implements ImmutableLocation
     
     @Override
     public StringLocation substring(int start, int end) {
-      StringLocationBuilder builder = new StringLocationBuilder();
+      List<StringLocation> locations = new ArrayList<StringLocation>();
       int charPointer = 0;
-      for (ImmutableLocation loc : locations) { 
+      for (ImmutableLocation loc : this.locations) { 
         if (start >= end) {
-          return builder.toLocation();
+          return new StringLocation(locations);
         }
         if (start <= charPointer && charPointer < end || 
             start < charPointer + loc.size() && charPointer + loc.size() < end || 
@@ -198,35 +211,30 @@ public class StringLocation implements ImmutableLocation
           int endIndex = Math.min(loc.size(), end - charPointer);
           int startIndex = start - charPointer;
 
-          ImmutableLocation newLoc = loc.substring(startIndex, endIndex);
-          builder.addLocation(newLoc.toLocationBuilder());
+          StringLocation newLoc = loc.substring(startIndex, endIndex);
+          locations.add(newLoc);
           start = start + newLoc.size();
         } 
         charPointer = charPointer + loc.size();
       }
-      
-      return builder.toLocation();
+      return new StringLocation(locations);
     }
     
     public List<StringLocation> getLocations(int lower, int upper, Location.ALIGNMENT alignment) {
-      List<StringLocation> result = new ArrayList<StringLocation>();
-      for (StringLocation l : getLineLocations()) {
-        if( lower < l.getPosition(alignment) && upper > l.getPosition(alignment)) {
-            result.add(l);
+      List<StringLocation> locs = new ArrayList<StringLocation>(getLineLocations());
+      for (Location l : locations) {
+        if( lower > l.getPosition(alignment) || upper < l.getPosition(alignment)) {
+          locs.remove(l);
         }
       }
-      return result;
+      return locs;
     }
     
     public StringLocation getLocation(int lower, int upper, Location.ALIGNMENT alignment) {
-      StringLocationBuilder result = new StringLocationBuilder();
-      for (ImmutableLocation l : locations) {
-        if( lower < l.getPosition(alignment) && upper > l.getPosition(alignment)) {
-          result.addLocation(l);
-        }
-      }
-      return result.toLocation();
+
+      return new StringLocation(getLocations(lower, upper, alignment));
     }
+    
 
     @Override
     public boolean hasPoint(int x, int y)
@@ -234,65 +242,25 @@ public class StringLocation implements ImmutableLocation
       return left < x && x < right && bottom < y && y < top;
     }
 
-    // TODO: What if there headers are in two lines with duplication of words on one of the lines?
-    public StringLocation getHeaders(int lower, int upper, Location.ALIGNMENT alignment, ImmutableLocation loc)
-    {
-      StringLocationBuilder result = new StringLocationBuilder();
-      for (ImmutableLocation l : locations) {
-        if( lower < l.getPosition(alignment) && upper > l.getPosition(alignment)) {
-
-          // If this header is aligned inside of result, 
-          // it is underneath one of the headers and should be included
-          if (result.getLeft() <= loc.getLeft() && result.getRight() >= loc.getRight()) {
-            List<StringLocationBuilder> headers = result.getLineLocationBuilders();
-            boolean done = false;
-            for (StringLocationBuilder header : headers) {
-                if (l.getLeft() <= header.getLeft() && l.getRight() >= header.getRight()) {
-                  header.addLocation(l);
-                  done = true;
-                  continue;
-                }
-
-            }
-            if(done) {
-              continue;
-            }
-          }
-          
-          // If result contains this header already, it is a table with horizontal duplication
-          // Either return this set of headers, or start a new set depending on if text is in this set
-          if (result.containsString(l.toString().trim())) {
-            if (result.getLeft() <= loc.getLeft() && result.getRight() >= loc.getRight()) {
-              return result.toLocation();
-            } else {
-              result = new StringLocationBuilder();
-            }
-          }
-
-          result.addLocation(l);
-        }
-      }
-      return result.toLocation();
-    }
-
     public boolean containsString(String substring)
     {
       return this.toString().contains(substring);
     }
 
-    public StringLocation getLocationUnder(ImmutableLocation header, int ignore)
+    public StringLocation getLocationUnder(ImmutableLocation header)
     {
-      StringLocationBuilder result = new StringLocationBuilder();
+      List<ImmutableLocation> result = new ArrayList<ImmutableLocation>();
       for (ImmutableLocation l : locations) {
         if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft() || l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight()) {
-          if (ignore != -1 && l.getLeft() < ignore && ignore < l.getRight()) {
-            continue;
-          }
-          result.addLocation(l);
+          result.add(l);
           continue;
         }
       }
-      return result.toLocation();
+      return new StringLocation(result);
+    }
+    
+    public StringLocation concat(StringLocation loc2) {
+      return new StringLocation(Arrays.asList(this, loc2));
     }
    
     public boolean empty() {
@@ -310,20 +278,9 @@ public class StringLocation implements ImmutableLocation
     public boolean matches(String regex) {
       return this.toString().trim().matches(regex);
     }
-
-    @Override
-    public StringLocationBuilder toLocationBuilder()
-    {
-      StringLocationBuilder builder = new StringLocationBuilder();
-      for (ImmutableLocation loc : locations) {
-        builder.addLocation(loc.toLocationBuilder());
-      }
-      return builder;
-    }
-
     
     public boolean equals(StringLocation location) {
-      return this.left == location.left & this.right == location.right && this.top == location.top && this.bottom == location.bottom;
+      return this.left == location.left & this.right == location.right && this.top == location.top && this.bottom == location.bottom && this.toString().equals(locations.toString());
     }
 
     public boolean contains(StringLocation header)
@@ -332,10 +289,5 @@ public class StringLocation implements ImmutableLocation
         return this.left <= header.left && this.top <= header.top && this.right >= header.right && this.bottom >= header.bottom;
       }
       return false;
-    }
-
-    public Location getFirstLcoation() 
-    {
-      return locations.get(0);
     }
 }

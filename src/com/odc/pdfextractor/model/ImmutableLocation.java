@@ -5,7 +5,6 @@ import com.odc.pdfextractor.model.builder.LocationBuilder;
 
 public interface ImmutableLocation extends Location
 {  
-  ImmutableLocation substring(int start, int end);
+  StringLocation substring(int start, int end);
   
-  LocationBuilder toLocationBuilder();
 }

@@ -7,6 +7,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.StringLocationHelper;
 import com.odc.pdfextractor.Location.ALIGNMENT;
 import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
@@ -137,13 +138,13 @@ public class DocumentLocation implements Location
       }
       return locs;
     }
-    
+
     public StringLocation substring(int start, int end) {
-      StringLocationBuilder result = new StringLocationBuilder();
+      List<StringLocation> locations = new ArrayList<StringLocation>();
       int charPointer = 0;
-      for (ImmutableLocation loc : locations) { 
+      for (ImmutableLocation loc : this.locations) { 
         if (start >= end) {
-          return result.toLocation();
+          return new StringLocation(locations);
         }
         if (start <= charPointer && charPointer < end || 
             start < charPointer + loc.size() && charPointer + loc.size() < end || 
@@ -151,14 +152,13 @@ public class DocumentLocation implements Location
           int endIndex = Math.min(loc.size(), end - charPointer);
           int startIndex = start - charPointer;
 
-          ImmutableLocation newLoc = loc.substring(startIndex, endIndex);
-          result.addLocation(newLoc);
+          StringLocation newLoc = loc.substring(startIndex, endIndex);
+          locations.add(newLoc);
           start = start + newLoc.size();
         } 
         charPointer = charPointer + loc.size();
       }
-      
-      return result.toLocation();
+      return new StringLocation(locations);
     }
 
     public void addLocations(List<StringLocation> locations)
@@ -189,16 +189,6 @@ public class DocumentLocation implements Location
     public boolean hasPoint(int x, int y)
     {
       return left < x && x < right && bottom < y && y < top;
-    }
-
-    public StringLocation getUniqueLocation(int page, int lower, int upper, Location.ALIGNMENT alignment, ImmutableLocation loc)
-    {
-      for (StringLocation l : locations) {
-        if (page != -1 && l.getPage() == page) {
-          return l.getHeaders(lower, upper, alignment, loc);
-        }
-      }
-      return null;
     }
     
     public boolean isAbove(ImmutableLocation loc) {

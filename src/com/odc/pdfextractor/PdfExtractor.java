@@ -54,7 +54,7 @@ public class PdfExtractor
     converter = null;
     
     List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
-    List<StringLocation> groupedDates = StringLocationHelper.groupInlineItems(dateLocations, 2, Location.ALIGNMENT.left);
+    List<StringLocation> groupedDates = StringLocationHelper.combineInlineItems(dateLocations, 2);
     List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, Constants.dateRegEx, groupedDates);
 
     List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();

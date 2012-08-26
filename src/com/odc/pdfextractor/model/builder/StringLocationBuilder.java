@@ -23,11 +23,6 @@ public class StringLocationBuilder implements LocationBuilder
     }
   
     public StringLocationBuilder()  { }
-    
-    public StringLocationBuilder(ImmutableLocation loc)
-    {
-      this.addLocation(loc.toLocationBuilder());
-    }
 
     public String toString() {
       StringBuilder word = new StringBuilder();
@@ -78,17 +73,6 @@ public class StringLocationBuilder implements LocationBuilder
       if (loc == null) {
         return;
       }
-      if (page == -1) {
-        page = loc.getPage();
-      }
-      locations.add(loc);
-    }
-    
-    public void addLocation(ImmutableLocation l) {
-      if (l == null) {
-        return;
-      }
-      LocationBuilder loc = l.toLocationBuilder();
       if (page == -1) {
         page = loc.getPage();
       }
