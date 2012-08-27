@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location;
 
@@ -24,24 +22,11 @@ public class DocumentLocation extends AbstractStringLocation
     public DocumentLocation(List<? extends StringLocation> stringLocations)
     {
       super(stringLocations);
-      for (Location loc : stringLocations) {
+      for (StringLocation loc : stringLocations) {
         if (loc.getPage() != -1) {
           pages.add(loc.getPage());
         }
       }
-    }
-    
-    public List<StringLocation> applyRegEx(String regEx) {
-      Pattern date2 = Pattern.compile(regEx);
-      Matcher matcher = date2.matcher(this.toString());
-      List<StringLocation> locs = new ArrayList<StringLocation>();
-      while(matcher.find()) {
-        StringLocation loc = substring(matcher.start(), matcher.end());
-        if (loc != null) {
-          locs.add(loc);
-        }
-      }
-      return locs;
     }
     
     public List<StringLocation> getLocations(int page, int lower, int upper, Location.ALIGNMENT alignment) {

@@ -40,16 +40,34 @@ public abstract class AbstractStringLocation implements Location
       locations.add(loc);
     }
     
-    public AbstractStringLocation(List<? extends StringLocation> stringLocations)
+
+    private void addPageNumber(int page)
     {
-      locations = new ArrayList<StringLocation>(stringLocations.size());
+      if (page > -1)
+      pageSet.add(page);
+    }
+
+    public AbstractStringLocation(int left, int right, int top, int bottom, int page, int size)
+    {
+      locations = Collections.emptyList();
+      this.left = left;
+      this.right = right;
+      this.top = top;
+      this.bottom = bottom;
+      addPageNumber(page);
+      this.size = size;
+    }
+
+    public AbstractStringLocation(Collection<? extends StringLocation> locations)
+    {
+      this.locations = new ArrayList<StringLocation>(locations.size());
       int size = 0;
       int left = Integer.MAX_VALUE;
       int right = Integer.MIN_VALUE;
       int top = Integer.MAX_VALUE;
       int bottom = Integer.MIN_VALUE;
-      if (stringLocations != null) {
-        for (StringLocation location : stringLocations) {
+      if (locations != null) {
+        for (StringLocation location : locations) {
           addLocation(location);
           size += location.size();
           int locLeft = location.getLeft();
@@ -78,23 +96,6 @@ public abstract class AbstractStringLocation implements Location
       this.right = right;
       this.bottom = bottom;
       this.top = top;
-    }
-
-    private void addPageNumber(int page)
-    {
-      if (page > -1)
-      pageSet.add(page);
-    }
-
-    public AbstractStringLocation(int left, int right, int top, int bottom, int page, int size)
-    {
-      locations = Collections.emptyList();
-      this.left = left;
-      this.right = right;
-      this.top = top;
-      this.bottom = bottom;
-      addPageNumber(page);
-      this.size = size;
     }
 
     public String toString() {

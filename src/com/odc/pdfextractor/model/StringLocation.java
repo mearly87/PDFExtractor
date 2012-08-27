@@ -1,6 +1,6 @@
 package com.odc.pdfextractor.model;
 
-import java.util.List;
+import java.util.Collection;
 
 public class StringLocation extends AbstractStringLocation
 {
@@ -10,7 +10,7 @@ public class StringLocation extends AbstractStringLocation
       page = loc.getPage();
     }
     
-    public StringLocation(List<? extends StringLocation> locations)
+    public StringLocation(Collection<? extends StringLocation> locations)
     {
       super(locations);
       if (this.getPages().size() > 1) {
@@ -28,8 +28,6 @@ public class StringLocation extends AbstractStringLocation
       this.page = page;
     } 
     
-
-    @Override
     public int getPage()
     {
       return page;

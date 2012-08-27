@@ -1,8 +1,7 @@
 package com.odc.pdfextractor.model;
 
-import com.odc.pdfextractor.model.builder.LocationBuilder;
 
-public class CharacterLocation extends StringLocation implements LocationBuilder {
+public class CharacterLocation extends StringLocation {
 
   private final char character;
   
@@ -43,12 +42,6 @@ public class CharacterLocation extends StringLocation implements LocationBuilder
   
   public boolean matches(String regex) {
     return String.valueOf(character).matches(regex);
-  }
-
-  @Override
-  public StringLocation getLocation()
-  {
-    return this;
   }
 
 }
