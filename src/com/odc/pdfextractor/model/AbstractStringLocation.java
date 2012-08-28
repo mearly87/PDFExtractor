@@ -187,6 +187,7 @@ public abstract class AbstractStringLocation implements Location
         if (start >= end) {
           return new StringLocation(locations);
         }
+
         if (start <= charPointer && charPointer < end || 
             start < charPointer + loc.size() && charPointer + loc.size() < end || 
             start > charPointer && charPointer + loc.size() >= end) {
@@ -233,7 +234,10 @@ public abstract class AbstractStringLocation implements Location
     {
       List<StringLocation> result = new ArrayList<StringLocation>();
       for (StringLocation l : locations) {
-        if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft() || l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight()) {
+        boolean isAfter = header.getLeft() > l.getRight();
+        boolean isBefore = header.getRight() < l.getLeft();
+        if (!isBefore && !isAfter) {
+       // if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft() || l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight()) {
           result.add(l);
           continue;
         }

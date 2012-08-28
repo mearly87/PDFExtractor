@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location.ALIGNMENT;
-import com.odc.pdfextractor.comparator.IsAfterVerticallyComparator;
+import com.odc.pdfextractor.comparator.StartsAfterVerticallyComparator;
 import com.odc.pdfextractor.model.DocumentLocation;
 import com.odc.pdfextractor.model.StringLocation;
 
@@ -52,10 +52,11 @@ public class StringLocationHelper
       StringLocation headers)
   {
     Map<StringLocation, StringLocation> headerToDataCol = new HashMap<StringLocation, StringLocation>();
-    StringLocation data = doc.getLocation(dateColumn.getPage(), dateColumn.getTop() - 3, dateColumn.getBottom() + 3, Location.ALIGNMENT.verticalCenter);
-    data = data.getLocation(headers.getLeft() - 3, headers.getRight() + 3, Location.ALIGNMENT.horizontalCenter);
+    StringLocation data = doc.getLocation(dateColumn.getPage(), dateColumn.getTop(), dateColumn.getBottom(), Location.ALIGNMENT.verticalCenter);
+    data = data.getLocation(headers.getLeft(), headers.getRight(), Location.ALIGNMENT.horizontalCenter);
     
     for (StringLocation header : headers.getLocations()) {
+
      StringLocation colDataLocation = data.getLocationUnder(header);
      headerToDataCol.put(header, colDataLocation);
     }
@@ -73,20 +74,22 @@ public class StringLocationHelper
       if (dateHeader.getPage() != -1 && l.getPage() == dateHeader.getPage()) {
         List<StringLocation> result = l.getLocations(dateHeader.getTop(), firstDate.getTop(), ALIGNMENT.verticalCenter);
         List<StringLocation> headers = StringLocationHelper.combineInlineItems(result, 0);
-        StringLocation firstheader = headers.get(0);
-        int start = 0;
-        int end = headers.size();
-        for (int i = 1; i < headers.size(); i++) {
-          if (firstheader.toString().equals(headers.get(i).toString())) {
-            if (dateHeader.getLeft() < headers.get(i - 1).getRight()) {
-              end = i;
-              break;
-            } else {
-              start = i;
+        if (headers.size() != 0) {
+          StringLocation firstheader = headers.get(0);
+          int start = 0;
+          int end = headers.size();
+          for (int i = 1; i < headers.size(); i++) {
+            if (firstheader.toString().equals(headers.get(i).toString())) {
+              if (dateHeader.getLeft() < headers.get(i - 1).getRight()) {
+                end = i;
+                break;
+              } else {
+                start = i;
+              }
             }
           }
+          return new StringLocation(headers.subList(start, end));
         }
-        return new StringLocation(headers.subList(start, end));
       }
     }
     return null;
@@ -98,7 +101,8 @@ public class StringLocationHelper
     List<StringLocation> dateCols = new ArrayList<StringLocation>();
     for (StringLocation loc : locations) {
       int left = loc.getLeft();
-      List<StringLocation> locs = doc.getLocations(loc.getPage(), left - 10, left + 10, Location.ALIGNMENT.left);
+      int right = loc.getRight();
+      List<StringLocation> locs = doc.getLocations(loc.getPage(), left, right, Location.ALIGNMENT.horizontalCenter);
       dateCols.addAll(cleanColumn("(D|d)(A|a)(T|t)(E|e)", regEx, locs));
     }
     return dateCols;
@@ -135,7 +139,7 @@ public class StringLocationHelper
   
   public static List<StringLocation> combineSimilarItems(List<StringLocation> items, int error) {
     List<StringLocation> result = new ArrayList<StringLocation>();
-    Comparator<Location> isAfterComparator = new IsAfterVerticallyComparator(error);
+    Comparator<Location> isAfterComparator = new StartsAfterVerticallyComparator(error);
     Collections.sort(items, isAfterComparator);
     List<StringLocation> buffer = new ArrayList<StringLocation>();
     for (StringLocation loc : items) {
@@ -168,7 +172,7 @@ public class StringLocationHelper
       List<Map<StringLocation, StringLocation>> transactions,
       Map<StringLocation, StringLocation> transMap, StringLocation dHeader, StringLocation d)
   {
-    System.out.print("Transaction in table " + tableName + " " + transMap + " ");
+    // System.out.print("Transaction in table " + tableName + " " + transMap + " ");
     if (dHeader != null) {
       System.out.print("\t" + dHeader + ": " + d);
     }

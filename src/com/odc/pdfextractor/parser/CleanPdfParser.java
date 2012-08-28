@@ -25,6 +25,7 @@ import org.apache.pdfbox.pdmodel.common.PDStream;
 import org.apache.pdfbox.util.PDFTextStripper;
 import org.apache.pdfbox.util.TextPosition;
 
+import com.odc.pdfextractor.comparator.TopToBottomComparator;
 import com.odc.pdfextractor.model.CharacterLocation;
 import com.odc.pdfextractor.model.DocumentLocation;
 import com.odc.pdfextractor.model.builder.DocumentBuilder;
@@ -43,7 +44,7 @@ import java.util.List;
  */
 public class CleanPdfParser extends PDFTextStripper implements PdfParser
 {
-    private DocumentBuilder docBuilder = new DocumentBuilder(1);
+    private DocumentBuilder docBuilder = new DocumentBuilder(3, new TopToBottomComparator());
 
     /**
      * Default constructor.
