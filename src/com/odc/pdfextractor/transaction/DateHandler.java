@@ -2,6 +2,7 @@ package com.odc.pdfextractor.transaction;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +15,10 @@ public class DateHandler implements ColumnHandler
   {
     try
     {
-      trans.setDate(determineDateFormat(data.trim()));
+     Calendar cal = Calendar.getInstance();
+
+     Date date = determineDateFormat(data.trim());
+     trans.setDate(date);
     }
     catch (ParseException e)
     {
@@ -61,8 +65,9 @@ public class DateHandler implements ColumnHandler
 public Date determineDateFormat(String dateString) throws ParseException {
     for (String regexp : DATE_FORMAT_REGEXPS.keySet()) {
         if (dateString.toLowerCase().matches(regexp)) {
-          SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT_REGEXPS.get(regexp));
-            return format.parse(dateString);
+        	String dateFormat = DATE_FORMAT_REGEXPS.get(regexp) + " yy";
+          SimpleDateFormat format = new SimpleDateFormat(dateFormat);
+          return format.parse(dateString + " 12");
         }
     }
     return null; // Unknown format.

@@ -17,7 +17,7 @@ import com.odc.pdfextractor.model.StringLocation;
 public class StringLocationHelper
 {
 
-  public static List<Map<StringLocation, StringLocation>> getTransactions(Location tableName,
+  public static List<Map<StringLocation, StringLocation>> getTransactions(StringLocation tableName,
       Map<StringLocation, StringLocation> headerToDataCol, List<StringLocation> dates)
   {
     List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();
@@ -28,22 +28,13 @@ public class StringLocationHelper
       if (i < dates.size()) {
         upper = dates.get(i).getTop();
       }
-  
-      StringLocation dHeader = null;
-      StringLocation d = null;
+      transMap.put(StringLocation.TABLE_HEADER, tableName);
       for (StringLocation header : headerToDataCol.keySet()) {
         StringLocation transDataCol = headerToDataCol.get(header);
         StringLocation transData = ((StringLocation) transDataCol).getLocation(lower, upper, Location.ALIGNMENT.verticalCenter);
-        
-        // Remove description to make pretty print the transaction with description last
-        if (header.toString().trim().equalsIgnoreCase("description")) {
-          dHeader = header;
-          d = transData;
-        } else {
-          transMap.put(header, transData);
-        }
+        transMap.put(header, transData);
       }
-      printTransaction(tableName, transactions, transMap, dHeader, d);
+      transactions.add(transMap);
     }
     return transactions;
   }
@@ -53,11 +44,16 @@ public class StringLocationHelper
   {
     Map<StringLocation, StringLocation> headerToDataCol = new HashMap<StringLocation, StringLocation>();
     StringLocation data = doc.getLocation(dateColumn.getPage(), dateColumn.getTop(), dateColumn.getBottom(), Location.ALIGNMENT.verticalCenter);
-    data = data.getLocation(headers.getLeft(), headers.getRight(), Location.ALIGNMENT.horizontalCenter);
-    
+    data = data.getLocationUnder(headers);
     for (StringLocation header : headers.getLocations()) {
 
-     StringLocation colDataLocation = data.getLocationUnder(header);
+     StringLocation colDataLocation;
+     if (header.containsString("Date")) {
+         colDataLocation = data.getLocationUnder(header, Constants.dateRegEx);	 
+     } else {
+    	 colDataLocation = data.getLocationUnder(header);
+     }
+
      headerToDataCol.put(header, colDataLocation);
     }
     return headerToDataCol;
@@ -73,11 +69,13 @@ public class StringLocationHelper
     for (StringLocation l : data.getLocations()) {
       if (dateHeader.getPage() != -1 && l.getPage() == dateHeader.getPage()) {
         List<StringLocation> result = l.getLocations(dateHeader.getTop(), firstDate.getTop(), ALIGNMENT.verticalCenter);
-        List<StringLocation> headers = StringLocationHelper.combineInlineItems(result, 0);
+        List<StringLocation> validHeaders = HeaderList.getValidHeaders(result);
+        List<StringLocation> headers = StringLocationHelper.combineInlineItems(validHeaders, 0);
         if (headers.size() != 0) {
           StringLocation firstheader = headers.get(0);
           int start = 0;
           int end = headers.size();
+          
           for (int i = 1; i < headers.size(); i++) {
             if (firstheader.toString().equals(headers.get(i).toString())) {
               if (dateHeader.getLeft() < headers.get(i - 1).getRight()) {
@@ -88,7 +86,7 @@ public class StringLocationHelper
               }
             }
           }
-          return new StringLocation(headers.subList(start, end));
+          return new StringLocation(headers.subList(start, Math.min(end, headers.size())));
         }
       }
     }
@@ -102,7 +100,7 @@ public class StringLocationHelper
     for (StringLocation loc : locations) {
       int left = loc.getLeft();
       int right = loc.getRight();
-      List<StringLocation> locs = doc.getLocations(loc.getPage(), left, right, Location.ALIGNMENT.horizontalCenter);
+      List<StringLocation> locs = doc.getLocationsInline(loc);
       dateCols.addAll(cleanColumn("(D|d)(A|a)(T|t)(E|e)", regEx, locs));
     }
     return dateCols;
@@ -172,12 +170,6 @@ public class StringLocationHelper
       List<Map<StringLocation, StringLocation>> transactions,
       Map<StringLocation, StringLocation> transMap, StringLocation dHeader, StringLocation d)
   {
-    // System.out.print("Transaction in table " + tableName + " " + transMap + " ");
-    if (dHeader != null) {
-      System.out.print("\t" + dHeader + ": " + d);
-    }
-    System.out.println();
-    transMap.put(dHeader, d);
-    transactions.add(transMap);
+
   }
 }

@@ -18,7 +18,6 @@ import com.odc.pdfextractor.model.StringLocation;
 public class DocumentBuilder
 {
   private Comparator<Location> topToBottom = new TopToBottomComparator();
-  private Comparator<Location> leftToRight = new LeftToRightComparator();
   private ArrayList<StringLocation> word;
   private ArrayList<StringLocation> text;
   private SortedSet<StringLocation> page;
@@ -52,6 +51,8 @@ public class DocumentBuilder
     }
 
     if (word.isEmpty() && (isAbove(text, charLoc) || isUnder(text, charLoc))) {
+      addWord();
+    } else if(word.isEmpty() && !text.isEmpty() && text.get(text.size() -1).getRight() + error < charLoc.getLeft()) {
       addWord();
     } else if (!word.isEmpty() &&  (isAbove(word, charLoc) || isUnder(word, charLoc))) {
       addWord();

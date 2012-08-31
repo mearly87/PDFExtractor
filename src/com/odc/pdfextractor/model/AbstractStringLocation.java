@@ -196,7 +196,7 @@ public abstract class AbstractStringLocation implements Location
 
           StringLocation newLoc = loc.substring(startIndex, endIndex);
           locations.add(newLoc);
-          start = start + newLoc.size();
+          start = start + newLoc.size() - 1;
         } 
         charPointer = charPointer + loc.size();
       }
@@ -237,7 +237,20 @@ public abstract class AbstractStringLocation implements Location
         boolean isAfter = header.getLeft() > l.getRight();
         boolean isBefore = header.getRight() < l.getLeft();
         if (!isBefore && !isAfter) {
-       // if (l.getLeft() <= header.getLeft() && l.getRight() > header.getLeft() || l.getLeft() >= header.getLeft() && l.getLeft() < header.getRight()) {
+          result.add(l);
+          continue;
+        }
+      }
+      return new StringLocation(result);
+    }
+    
+    public StringLocation getLocationUnder(StringLocation header, String regex)
+    {
+      List<StringLocation> result = new ArrayList<StringLocation>();
+      for (StringLocation l : locations) {
+        boolean isAfter = header.getLeft() > l.getRight();
+        boolean isBefore = header.getRight() < l.getLeft();
+        if (!isBefore && !isAfter && l.toString().trim().matches(regex)) {
           result.add(l);
           continue;
         }
@@ -261,4 +274,22 @@ public abstract class AbstractStringLocation implements Location
       return this.toString().trim().matches(regex);
     }
    
+    
+    public List<StringLocation> getLocationsInline(Location loc) {
+      boolean isAfter = loc.getLeft() > this.getRight();
+      boolean isBefore = loc.getRight() < this.getLeft();
+      if (isAfter || isBefore) {
+        return Collections.emptyList();
+      }
+      List<StringLocation> locs = new ArrayList<StringLocation>(locations);
+      for (Location l : locations) {
+        isAfter = l.getLeft() > loc.getRight();
+        isBefore = l.getRight() < loc.getLeft();
+        if( isAfter || isBefore) {
+          locs.remove(l);
+        }
+      }
+      return locs;
+    }
+    
 }

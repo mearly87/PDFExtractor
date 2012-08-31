@@ -3,8 +3,10 @@ package com.odc.pdfextractor;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,6 +16,7 @@ import com.odc.pdfextractor.parser.CleanPdfParser;
 import com.odc.pdfextractor.parser.DirtyPdfParser;
 import com.odc.pdfextractor.parser.PdfParser;
 import com.odc.pdfextractor.transaction.Transaction;
+import com.odc.pdfextractor.transaction.Transaction.TransactionType;
 import com.odc.pdfextractor.transaction.TransactionBuilder;
 
 
@@ -40,8 +43,48 @@ public class PdfExtractor
     Calendar endTime = Calendar.getInstance();
     long end = endTime.getTimeInMillis();
     System.out.println("Retrieved in " + (double) ((end - start)) / 1000 + " seconds");
+    List<Transaction> transactions = new ArrayList<Transaction>();
     for (Map<StringLocation, StringLocation> trans : transMap) {
-      TransactionBuilder.getTransaction(trans);
+      transactions.add(TransactionBuilder.getTransaction(trans));
+    }
+    // TODO
+    SimpleDateFormat simpleDateformat = new SimpleDateFormat("MMM");
+    Map<String, Map<TransactionType, List<Transaction>>> transByMonth = new HashMap<String, Map<TransactionType, List<Transaction>>>();
+    for (Transaction trans : transactions) {
+    	if (trans.getDate() != null) {
+	    	String month = simpleDateformat.format(trans.getDate());
+	    	if (!transByMonth.containsKey(month)) {
+	    		Map<TransactionType, List<Transaction>> transTypeMap = new HashMap<TransactionType, List<Transaction>>();
+	    		for (TransactionType transType : TransactionType.values())
+	    			transTypeMap.put(transType, new ArrayList<Transaction>());
+	    		transByMonth.put(month, transTypeMap);
+	    	}
+	    	transByMonth.get(month).get(trans.getType()).add(trans);
+    	}
+    }
+
+    for (String key : transByMonth.keySet()) {
+    	System.out.print(key + " ");
+
+		for (TransactionType transType : TransactionType.values()) {
+			System.out.print(transType + ": " + transByMonth.get(key).get(transType).size());
+			double total = 0.0;
+			double balance = 0.0;
+			int bCount = 0;
+			for (Transaction t : transByMonth.get(key).get(transType)) {
+				if (t.getAmount() != null)
+					total += t.getAmount();
+				if (t.getResultingBalance() != null) {
+					balance += t.getResultingBalance();
+					bCount++;
+				}
+			}
+			System.out.print(" Total: " + total);
+			if (bCount > 0) {
+				System.out.println(" Average Balance: " + balance / bCount);				
+			}
+			System.out.println();
+		}
     }
   }
 
@@ -66,7 +109,7 @@ public class PdfExtractor
     for (StringLocation dateColumn : dateCols) {
       StringLocation headers = StringLocationHelper.getHeaders(doc, dateColumn);
       if (headers != null) {
-        Location tableName = doc.getLocation(headers.getPage(), headers.getTop() - 15, headers.getTop(), Location.ALIGNMENT.bottom);
+        StringLocation tableName = doc.getLocation(headers.getPage(), headers.getTop() - 25, headers.getTop(), Location.ALIGNMENT.bottom);
         
         Map<StringLocation, StringLocation> headerToDataCol = StringLocationHelper.getHeaderToDataMap(doc, dateColumn, headers);
         List<StringLocation> dates = dateColumn.getLocations();

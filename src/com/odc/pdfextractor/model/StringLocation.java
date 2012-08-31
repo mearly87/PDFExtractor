@@ -4,17 +4,21 @@ import java.util.Collection;
 
 public class StringLocation extends AbstractStringLocation
 {
+	
+	public final static StringLocation TABLE_HEADER = new StringLocation(-1,-1,-1,-1,-1,-1); 
+	
     private final int page;
     public StringLocation(StringLocation loc) {
       super(loc);
       page = loc.getPage();
     }
+   
     
     public StringLocation(Collection<? extends StringLocation> locations)
     {
       super(locations);
       if (this.getPages().size() > 1) {
-        throw new RuntimeException("StringLocation may not span more than 1 page");
+        // throw new RuntimeException("StringLocation may not span more than 1 page");
       } if (!this.getPages().isEmpty()) {
         this.page = this.getPages().iterator().next();
       } else {

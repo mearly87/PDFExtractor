@@ -68,6 +68,55 @@ public class TransactionBuilderTest
   }
   
   @Test
+  public void transactionWithAmountColumnFilledHasCorrectAmount() throws ParseException {
+    dataMap.put(new TestStringLocation("Amount"), new TestStringLocation("1,000.01"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals(new Double(1000.01), trans.getAmount());
+  }
+  
+  @Test
+  public void transactionWithCheckColumnFilledHasDecsriptionFilledIn() throws ParseException {
+    dataMap.put(new TestStringLocation("Check"), new TestStringLocation("1001"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals("CHECK NO: 1001", trans.getDescription());
+  }
+  
+  @Test
+  public void transactionWithCheckColumnFilledIsCheckType() throws ParseException {
+    dataMap.put(new TestStringLocation("Check"), new TestStringLocation("1001"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals(TransactionType.CHECK, trans.getType());
+  }
+  
+  @Test
+  public void transactionWithBalanceColumnFilledHasDecsriptionFilledIn() throws ParseException {
+    dataMap.put(new TestStringLocation("Balance"), new TestStringLocation("1000.01"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals(new Double(1000.01), trans.getResultingBalance());
+  }
+  
+  @Test
+  public void transactionWithOnlyBalanceColumnFilledHasTypeBalance() throws ParseException {
+    dataMap.put(new TestStringLocation("Balance"), new TestStringLocation("1000.01"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals(TransactionType.BALANCE, trans.getType());
+  }
+  
+  @Test
+  public void transactionWithBalanceAndDebitColumnFilledHasTypeDebit() throws ParseException {
+    dataMap.put(new TestStringLocation("Balance"), new TestStringLocation("1000.02"));
+    dataMap.put(new TestStringLocation("Debit"), new TestStringLocation("1,000.01"));
+    Transaction trans = TransactionBuilder.getTransaction(dataMap);
+    assertNotNull(trans);
+    assertEquals(TransactionType.DEBIT, trans.getType());
+  }
+  
+  @Test
   public void transactionWithDescriptionInMapHasDescription() throws ParseException {
     dataMap.put(new TestStringLocation("Description"), new TestStringLocation("This is a transcation"));
     Transaction trans = TransactionBuilder.getTransaction(dataMap);

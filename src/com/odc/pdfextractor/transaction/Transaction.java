@@ -2,6 +2,7 @@ package com.odc.pdfextractor.transaction;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Formatter;
 
 public class Transaction
 {
@@ -15,7 +16,7 @@ public class Transaction
   
   private TransactionType type;
   private Double amount;
-  private Double resultingBalance;
+  private Double balance;
   private Date date;
   private String description;
   
@@ -39,16 +40,20 @@ public class Transaction
   public void setAmount(String amount)
   {
     String amountStriped = amount.replaceAll("[^0-9|.]", "");
-    this.amount = Double.parseDouble(amountStriped);
+    try {
+      this.amount = Double.parseDouble(amountStriped);
+    } catch(Exception s) {
+      System.out.println(amount);
+    }
   }
   
   public Double getResultingBalance()
   {
-    return resultingBalance;
+    return balance;
   }
   public void setResultingBalance(Double resultingBalance)
   {
-    this.resultingBalance = resultingBalance;
+    this.balance = resultingBalance;
   }
   public Date getDate()
   {
@@ -79,7 +84,26 @@ public class Transaction
   }
   
   public String toString() {
-    return getDateString() + "\tType: " + type.toString() + "\tAmount: " + amount + "\t\tDescription: " + description;
+    StringBuilder result = new StringBuilder();
+    Formatter formatter = new Formatter(result);
+    formatter.format("%-5.5s %-20.20s", getDateString(), "TYPE: " + type);
+    if(amount!=null) {
+      formatter.format("%-25.25s", "AMOUNT: " + amount);
+    } else {
+      formatter.format("%-5s %s %-17s", "", "-", "");
+    }
+    if(balance!=null) {
+      formatter.format("%-25.25s", "BALANCE: " + balance);
+    } else {
+      formatter.format("%-5s %s %-17s", "", "-", "");
+    }
+    formatter.format("%s", "DESCRIPTION: " + description);
+    return result.toString();
+  }
+  public void setBalance(String balance)
+  {
+    String amountStriped = balance.replaceAll("[^0-9|.]", "");
+    this.balance = Double.parseDouble(amountStriped);
   }
   
   

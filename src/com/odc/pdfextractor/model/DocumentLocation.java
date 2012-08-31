@@ -1,6 +1,7 @@
 package com.odc.pdfextractor.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,6 +38,18 @@ public class DocumentLocation extends AbstractStringLocation
       }
       return result;
     }
+    
+    public List<StringLocation> getLocationsInline(Location loc) {
+      
+      List<StringLocation> locs = new ArrayList<StringLocation>();
+      for (StringLocation l : this.getLocations()) {
+        if( l.getPage() == loc.getPage()) {
+          locs.addAll(l.getLocationsInline(loc));
+        }
+      }
+      return locs;
+    }
+
     
     public StringLocation getLocation(int page, int lower, int upper, Location.ALIGNMENT alignment) {
       for (StringLocation l : getLocations()) {
