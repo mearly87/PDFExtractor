@@ -27,8 +27,10 @@ public class TableClassifier {
 		if (possibleTypes.size() == 1) {
 			return possibleTypes.iterator().next();
 		} 
-		
-		possibleTypes.remove(TableType.CHECK);
+		if (possibleTypes.contains(TableType.CHECK)) {
+			return TableType.CHECK;
+		}
+
 		possibleTypes.remove(TableType.BALANCE);
 		
 		if(possibleTypes.size() == 1) {
@@ -58,6 +60,8 @@ public class TableClassifier {
 	      put("withdrawals", TableType.DEBIT);
 	      put("fees", TableType.DEBIT);
 	      put("withdrawals/debits", TableType.DEBIT);
+	      put("payments", TableType.DEBIT);
+	      put("service charges", TableType.DEBIT);
 	      
 	      put("credits", TableType.CREDIT);
 	      put("credit", TableType.CREDIT);

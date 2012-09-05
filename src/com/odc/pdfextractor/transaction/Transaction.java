@@ -37,13 +37,14 @@ public class Transaction
     this.amount = amount;
   }
   
-  public void setAmount(String amount)
+  public boolean setAmount(String amount)
   {
     String amountStriped = amount.replaceAll("[^0-9|.]", "");
     try {
       this.amount = Double.parseDouble(amountStriped);
+      return true;
     } catch(Exception s) {
-      System.out.println(amount);
+      return false;
     }
   }
   
@@ -103,7 +104,11 @@ public class Transaction
   public void setBalance(String balance)
   {
     String amountStriped = balance.replaceAll("[^0-9|.]", "");
+    try {
     this.balance = Double.parseDouble(amountStriped);
+    } catch (NumberFormatException e) {
+    	System.out.println("Error parsing amount");
+    }
   }
   
   

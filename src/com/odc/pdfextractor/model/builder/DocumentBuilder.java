@@ -54,7 +54,7 @@ public class DocumentBuilder
       addWord();
     } else if(word.isEmpty() && !text.isEmpty() && text.get(text.size() -1).getRight() + error < charLoc.getLeft()) {
       addWord();
-    } else if (!word.isEmpty() &&  (isAbove(word, charLoc) || isUnder(word, charLoc))) {
+    } else if (!word.isEmpty() &&  (isAbove(word, charLoc) ^ isUnder(word, charLoc))) {
       addWord();
     } else if (!word.isEmpty() && word.get(word.size() -1).getRight() + error < charLoc.getLeft()) {
       addWord();

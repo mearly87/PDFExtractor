@@ -26,7 +26,7 @@ public class StringLocationHelper
       int lower = dates.get(i - 1).getTop();
       int upper = Integer.MAX_VALUE;
       if (i < dates.size()) {
-        upper = dates.get(i).getTop();
+        upper = dates.get(i).getTop() - 1;
       }
       transMap.put(StringLocation.TABLE_HEADER, tableName);
       for (StringLocation header : headerToDataCol.keySet()) {
@@ -49,7 +49,9 @@ public class StringLocationHelper
 
      StringLocation colDataLocation;
      if (header.containsString("Date")) {
-         colDataLocation = data.getLocationUnder(header, Constants.dateRegEx);	 
+         colDataLocation = dateColumn;	 
+     } else if (header.containsString("Amount")) {
+    	 colDataLocation = data.getLocationUnder(header, Constants.amountRegEx);
      } else {
     	 colDataLocation = data.getLocationUnder(header);
      }
@@ -70,7 +72,7 @@ public class StringLocationHelper
       if (dateHeader.getPage() != -1 && l.getPage() == dateHeader.getPage()) {
         List<StringLocation> result = l.getLocations(dateHeader.getTop(), firstDate.getTop(), ALIGNMENT.verticalCenter);
         List<StringLocation> validHeaders = HeaderList.getValidHeaders(result);
-        List<StringLocation> headers = StringLocationHelper.combineInlineItems(validHeaders, 0);
+        List<StringLocation> headers = StringLocationHelper.combineSimilarItems(validHeaders, 0);
         if (headers.size() != 0) {
           StringLocation firstheader = headers.get(0);
           int start = 0;
@@ -94,16 +96,39 @@ public class StringLocationHelper
   }
 
   public static List<StringLocation> getDateColumns(DocumentLocation doc, String regEx,
-      List<StringLocation> locations)
-  {
-    List<StringLocation> dateCols = new ArrayList<StringLocation>();
-    for (StringLocation loc : locations) {
-      int left = loc.getLeft();
-      int right = loc.getRight();
-      List<StringLocation> locs = doc.getLocationsInline(loc);
-      dateCols.addAll(cleanColumn("(D|d)(A|a)(T|t)(E|e)", regEx, locs));
+	      List<StringLocation> locations)
+	  {
+	    List<StringLocation> dateCols = new ArrayList<StringLocation>();
+	    for (StringLocation loc : locations) {
+	      List<StringLocation> locs = doc.getLocationsInline(loc);
+	      dateCols.addAll(getColumn("(POSTING)|(D|d)(A|a)(T|t)(E|e)", locs, loc));
+	    }
+	    return dateCols;
+	  }
+	  
+  public static List<StringLocation> getColumn(String headerPattern, List<StringLocation> possibleHeaders, StringLocation dataCol) {
+    Pattern headerRegEx = Pattern.compile(headerPattern);
+    List<StringLocation> dataCols = new ArrayList<StringLocation>();
+    StringLocation prevHeader = null;
+    StringLocation currHeader = null;
+    for (StringLocation header : possibleHeaders) {
+	  Matcher headerMatcher = headerRegEx.matcher(header.toString().trim());
+	  if (headerMatcher.matches()) {
+		prevHeader = currHeader;
+		currHeader = header;
+		if (prevHeader != null) {
+		  StringLocation col = dataCol.getLocation(prevHeader, currHeader);
+		  if (!col.empty())
+			  dataCols.add(col);
+		}
+	  }
     }
-    return dateCols;
+    if (currHeader != null) {
+    	List<StringLocation> lastCol = dataCol.getLocationsUnder(currHeader);
+    	lastCol.add(0, currHeader);
+    	dataCols.add(new StringLocation(lastCol));
+    }
+    return dataCols;
   }
 
   public static List<StringLocation> cleanColumn(String header, String data, List<StringLocation> locs) {
@@ -119,8 +144,8 @@ public class StringLocationHelper
         if (dateCol != null) {
           result.add(new StringLocation(dateCol));
         }
-        dateCol = new ArrayList<StringLocation>();
-        dateCol.add(loc);
+        	dateCol = new ArrayList<StringLocation>();
+        	dateCol.add(loc);
       }
       Matcher dataMatcher = dataRegEx.matcher(loc.toString());
       if (dataMatcher.find()) {
@@ -160,16 +185,5 @@ public class StringLocationHelper
       result.add(new StringLocation(buffer));
     }
     return result;
-  }
-  
-  public static List<StringLocation> combineInlineItems(List<StringLocation> items, int error) {
-    return combineSimilarItems(items, error);
-  }
-
-  private static void printTransaction(Location tableName,
-      List<Map<StringLocation, StringLocation>> transactions,
-      Map<StringLocation, StringLocation> transMap, StringLocation dHeader, StringLocation d)
-  {
-
   }
 }

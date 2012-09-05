@@ -32,7 +32,7 @@ public class CharacterLocation extends StringLocation {
     if (start + size() != end) {
       throw new RuntimeException("Invalid indexes");
     }
-    return new StringLocation(this);
+    return this;
   }
   @Override
   public String fullPrint()

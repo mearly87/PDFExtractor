@@ -1,6 +1,8 @@
 package com.odc.pdfextractor.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 public class StringLocation extends AbstractStringLocation
 {

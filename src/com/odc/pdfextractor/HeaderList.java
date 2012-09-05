@@ -39,10 +39,13 @@ public class HeaderList extends ArrayList<String> {
 	      add("date");
 	      add("date posted");
 	      add("posted date");
+	      add("posting");
+	      add("posted");
 	      add("dates");
 
 	      add("description");
 	      add("descriptions");
+	      add("description of transaction");
 	      
 	      add("check");
 	      add("check number");
@@ -58,6 +61,7 @@ public class HeaderList extends ArrayList<String> {
 	      add("balance");
 	      add("balance ($)");
 	      add("resulting balance");
+	      add("ending balance");
 	}
 
 	public static List<String> getHeaders() {

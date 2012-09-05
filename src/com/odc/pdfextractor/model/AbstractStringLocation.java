@@ -196,7 +196,7 @@ public abstract class AbstractStringLocation implements Location
 
           StringLocation newLoc = loc.substring(startIndex, endIndex);
           locations.add(newLoc);
-          start = start + newLoc.size() - 1;
+          start = start + newLoc.size();
         } 
         charPointer = charPointer + loc.size();
       }
@@ -229,19 +229,45 @@ public abstract class AbstractStringLocation implements Location
     {
       return this.toString().contains(substring);
     }
-
-    public StringLocation getLocationUnder(StringLocation header)
+    
+    public List<StringLocation> getLocationsUnder(StringLocation header)
     {
       List<StringLocation> result = new ArrayList<StringLocation>();
       for (StringLocation l : locations) {
         boolean isAfter = header.getLeft() > l.getRight();
         boolean isBefore = header.getRight() < l.getLeft();
-        if (!isBefore && !isAfter) {
+        boolean isBelow = header.getTop() < l.getTop();
+        if (!isBefore && !isAfter && isBelow) {
           result.add(l);
           continue;
         }
       }
-      return new StringLocation(result);
+      return result;
+    }
+
+    public StringLocation getLocationUnder(StringLocation header)
+    {
+      return new StringLocation(getLocationsUnder(header));
+    }
+    
+    public StringLocation getLocationAbove(StringLocation header)
+    {
+      return new StringLocation(getLocationsAbove(header));
+    }
+    
+    public List<StringLocation> getLocationsAbove(StringLocation header)
+    {
+      List<StringLocation> result = new ArrayList<StringLocation>();
+      for (StringLocation l : locations) {
+        boolean isAfter = header.getLeft() > l.getRight();
+        boolean isBefore = header.getRight() < l.getLeft();
+        boolean isBelow = header.getBottom() > l.getBottom();
+        if (!isBefore && !isAfter && isBelow) {
+          result.add(l);
+          continue;
+        }
+      }
+      return result;
     }
     
     public StringLocation getLocationUnder(StringLocation header, String regex)
@@ -259,7 +285,7 @@ public abstract class AbstractStringLocation implements Location
     }
    
     public boolean empty() {
-      return pageSet.size() > 0;
+      return pageSet.size() == 0;
     }
     
     public boolean isAbove(Location loc) {
@@ -291,5 +317,18 @@ public abstract class AbstractStringLocation implements Location
       }
       return locs;
     }
+    
+	public List<StringLocation> getLocations(StringLocation prevHeader,
+			StringLocation currHeader) {
+		List<StringLocation> result = this.getLocationsUnder(prevHeader);
+		result.retainAll(this.getLocationsAbove(currHeader));
+		result.add(0, prevHeader);
+		return result;
+	}	
+	
+	public StringLocation getLocation(StringLocation prevHeader,
+			StringLocation currHeader) {
+		return new StringLocation(getLocations(prevHeader, currHeader));
+	}
     
 }

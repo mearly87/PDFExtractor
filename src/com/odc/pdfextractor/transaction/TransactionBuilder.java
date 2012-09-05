@@ -51,7 +51,15 @@ public class TransactionBuilder
         if(dataMap.get(key) != null) {
           handler.handleColumn(trans, key.toString().trim().toLowerCase(), dataMap.get(key).toString().trim());
         }
-      }
+      }  
+    }
+    if (trans.getAmount() == null && trans.getResultingBalance() != null) {
+    	trans.setType(TransactionType.BALANCE);
+    }
+    if (trans.getType() == TransactionType.BALANCE) {
+    	if (trans.getAmount() != null && trans.getResultingBalance() == null) {
+    		trans.setResultingBalance(trans.getAmount());
+    	}
     }
     if (trans.getType() == null) {
       trans.setType(TransactionType.UNKNOWN);
@@ -64,12 +72,14 @@ public class TransactionBuilder
   private static Map<String, ColumnHeader> keywordMap = new HashMap<String, ColumnHeader>() {
     @Override
     public ColumnHeader get(Object key) {
-      return super.get(key.toString().toLowerCase().trim());
+    	String newKey = key.toString().replaceAll("\\s+", " ").toLowerCase().trim();
+      return super.get(newKey);
     }
     
     @Override
     public boolean containsKey(Object key) {
-      return super.containsKey(key.toString().toLowerCase().trim());
+      String newKey = key.toString().replaceAll("\\s+", " ").toLowerCase().trim();
+      return super.containsKey(newKey);
     }
     
     {
@@ -93,9 +103,11 @@ public class TransactionBuilder
       put("date posted", ColumnHeader.DATE);
       put("posted date", ColumnHeader.DATE);
       put("dates", ColumnHeader.DATE);
+      put("posting", ColumnHeader.DATE);
 
       put("description", ColumnHeader.DESCRIPTION);
       put("descriptions", ColumnHeader.DESCRIPTION);
+      put("description of transaction", ColumnHeader.DESCRIPTION);
       
       put("check", ColumnHeader.CHECK_NUMBER);
       put("check number", ColumnHeader.CHECK_NUMBER);
@@ -111,6 +123,7 @@ public class TransactionBuilder
       put("balance", ColumnHeader.BALANCE);
       put("balance ($)", ColumnHeader.BALANCE);
       put("resulting balance", ColumnHeader.BALANCE);
+      put("ending balance", ColumnHeader.BALANCE);
     }
     };
   

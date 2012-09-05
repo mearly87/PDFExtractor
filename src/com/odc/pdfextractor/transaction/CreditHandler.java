@@ -10,8 +10,9 @@ public class CreditHandler implements ColumnHandler
   {
     String cleanData = data.trim();
     if (!cleanData.isEmpty()) {
-      trans.setType(TransactionType.CREDIT);
-      trans.setAmount(data);
+     if ( trans.setAmount(data) ) {
+         trans.setType(TransactionType.CREDIT);
+     }
     }
   }
 

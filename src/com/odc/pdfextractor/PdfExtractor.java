@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,24 +65,32 @@ public class PdfExtractor
     }
 
     for (String key : transByMonth.keySet()) {
-    	System.out.print(key + " ");
+    	System.out.println("### " + key + " ###");
 
 		for (TransactionType transType : TransactionType.values()) {
 			System.out.print(transType + ": " + transByMonth.get(key).get(transType).size());
 			double total = 0.0;
 			double balance = 0.0;
-			int bCount = 0;
+	    	Calendar prevBalanceDate = null;
+	    	Calendar currBalanceDate = null;
+	    	Transaction lastTransaction = null;
 			for (Transaction t : transByMonth.get(key).get(transType)) {
 				if (t.getAmount() != null)
 					total += t.getAmount();
 				if (t.getResultingBalance() != null) {
-					balance += t.getResultingBalance();
-					bCount++;
+					prevBalanceDate = currBalanceDate;
+					currBalanceDate = Calendar.getInstance();
+					currBalanceDate.setTime(t.getDate());
+					if (prevBalanceDate != null) {
+						balance += lastTransaction.getResultingBalance() * (currBalanceDate.get(Calendar.DAY_OF_MONTH) - prevBalanceDate.get(Calendar.DAY_OF_MONTH));
+					}
 				}
+				lastTransaction = t;
 			}
 			System.out.print(" Total: " + total);
-			if (bCount > 0) {
-				System.out.println(" Average Balance: " + balance / bCount);				
+			if (currBalanceDate != null) {
+				balance += lastTransaction.getResultingBalance() * (currBalanceDate.getActualMaximum(Calendar.DAY_OF_MONTH) + 1 - currBalanceDate.get(Calendar.DAY_OF_MONTH));
+				System.out.print(" Average Balance: " + balance / currBalanceDate.getActualMaximum(Calendar.DAY_OF_MONTH));
 			}
 			System.out.println();
 		}
@@ -101,7 +110,7 @@ public class PdfExtractor
     converter = null;
     
     List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
-    List<StringLocation> groupedDates = StringLocationHelper.combineInlineItems(dateLocations, 0);
+    List<StringLocation> groupedDates = StringLocationHelper.combineSimilarItems(dateLocations, 0);
     List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, Constants.dateRegEx, groupedDates);
 
     List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();
