@@ -126,6 +126,12 @@ Thumbs.db
 # Folder config file
 Desktop.ini
 
+# The pdf's in this folder are private!
+*.pdf
+bofa.xml
+dirty.xml
+mahout-core-0.7.jar
+output.txt
 
 #############
 ## Python
@@ -162,5 +168,4 @@ pip-log.txt
 # Mac crap
 .DS_Store
 
-# The pdf's in this folder are private!
-.pdf
+
