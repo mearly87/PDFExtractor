@@ -10,6 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.comparator.TopToBottomComparator;
 
 public abstract class AbstractStringLocation implements Location
 {
@@ -210,6 +211,7 @@ public abstract class AbstractStringLocation implements Location
           locs.remove(l);
         }
       }
+      Collections.sort(locs, new TopToBottomComparator());
       return locs;
     }
     
@@ -242,6 +244,7 @@ public abstract class AbstractStringLocation implements Location
           continue;
         }
       }
+      Collections.sort(result, new TopToBottomComparator());
       return result;
     }
 
@@ -267,6 +270,7 @@ public abstract class AbstractStringLocation implements Location
           continue;
         }
       }
+      Collections.sort(result, new TopToBottomComparator());
       return result;
     }
     
@@ -281,6 +285,7 @@ public abstract class AbstractStringLocation implements Location
           continue;
         }
       }
+      Collections.sort(result, new TopToBottomComparator());
       return new StringLocation(result);
     }
    
@@ -323,12 +328,22 @@ public abstract class AbstractStringLocation implements Location
 		List<StringLocation> result = this.getLocationsUnder(prevHeader);
 		result.retainAll(this.getLocationsAbove(currHeader));
 		result.add(0, prevHeader);
+	      Collections.sort(result, new TopToBottomComparator());
 		return result;
 	}	
 	
 	public StringLocation getLocation(StringLocation prevHeader,
 			StringLocation currHeader) {
 		return new StringLocation(getLocations(prevHeader, currHeader));
+	}
+	
+	public boolean intersects(Location loc) {
+        boolean isBefore = this.getRight()  < loc.getLeft();
+        boolean isAfter = this.getLeft()  > loc.getRight();
+        boolean isAbove = this.getBottom()  < loc.getBottom();
+        boolean isBelow = this.getTop() > loc.getTop();
+        return !isBefore && !isAfter && !isAbove && !isBelow;
+		
 	}
     
 }

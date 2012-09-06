@@ -1,14 +1,16 @@
-package com.odc.pdfextractor.transaction;
+package com.odc.pdfextractor.table.cloumn.handler;
 
-import com.odc.pdfextractor.transaction.Transaction.TransactionType;
+import com.odc.pdfextractor.model.StringLocation;
+import com.odc.pdfextractor.model.Transaction;
+import com.odc.pdfextractor.model.Transaction.TransactionType;
 
 public class CheckNumberHandler implements ColumnHandler
 {
 
   @Override
-  public void handleColumn(Transaction trans, String header, String data)
+  public void handleColumn(Transaction trans, StringLocation data)
   {
-    String cleanData = data.trim();
+    String cleanData = data.toString().trim();
     if (!cleanData.isEmpty()) {
       trans.setType(TransactionType.CHECK);
       if (trans.getDescription() == null) {

@@ -1,26 +1,27 @@
-package com.odc.pdfextractor.transaction;
+package com.odc.pdfextractor.table.cloumn.handler;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.odc.pdfextractor.model.StringLocation;
+import com.odc.pdfextractor.model.Transaction;
 
 public class DateHandler implements ColumnHandler
 {
 
   @Override
-  public void handleColumn(Transaction trans, String header, String data)
+  public void handleColumn(Transaction trans, StringLocation data)
   {
 	  if (trans.getDate() != null) {
 		  return;
 	  }
     try
     {
-     Calendar cal = Calendar.getInstance();
 
-     Date date = determineDateFormat(data.trim());
+     Date date = determineDateFormat(data.toString().trim());
      trans.setDate(date);
     }
     catch (ParseException e)
@@ -34,7 +35,10 @@ public class DateHandler implements ColumnHandler
     put("^\\d{1,2}/\\d{1,2}", "M/d");
     put("[a-z]{3}[0-9]{1,2}", "MMMd");
     put("[a-z]{3}\\s[0-9]{1,2}", "MMM d");
-    
+    put("[0-9]{1,2}-[a-z]{3}", "d-MMM");
+    put("[0-9]{1,2}\\s-[a-z]{3}", "d -MMM");
+    put("[0-9]{1,2}-\\s[a-z]{3}", "d- MMM");
+    put("[0-9]{1,2}\\s-\\s[a-z]{3}", "d - MMM");
 }};
 
 /**

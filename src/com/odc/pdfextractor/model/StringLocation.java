@@ -1,8 +1,6 @@
 package com.odc.pdfextractor.model;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 public class StringLocation extends AbstractStringLocation
 {
@@ -20,7 +18,7 @@ public class StringLocation extends AbstractStringLocation
     {
       super(locations);
       if (this.getPages().size() > 1) {
-        // throw new RuntimeException("StringLocation may not span more than 1 page");
+        throw new RuntimeException("StringLocation may not span more than 1 page");
       } if (!this.getPages().isEmpty()) {
         this.page = this.getPages().iterator().next();
       } else {

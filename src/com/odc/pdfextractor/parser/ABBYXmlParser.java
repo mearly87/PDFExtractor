@@ -29,8 +29,14 @@ public class ABBYXmlParser extends DefaultHandler {
       charParams = true;
       left = Integer.parseInt(attr.getValue("l"));
       right = Integer.parseInt(attr.getValue("r"));
-      top = Integer.parseInt(attr.getValue("t"));
-      bottom = Integer.parseInt(attr.getValue("b"));
+     // top = Integer.parseInt(attr.getValue("t"));
+     // bottom = Integer.parseInt(attr.getValue("b"));
+    } else if(qName.equals("line")) {
+    	int newBaseline = Integer.parseInt(attr.getValue("baseline"));
+    	if (Math.abs(bottom - newBaseline) > 0) {
+    		bottom = newBaseline;
+    		top = Integer.parseInt(attr.getValue("t"));
+    	}
     }
     else if (qName.equalsIgnoreCase("page")) {
       docBuilder.incrementPage();

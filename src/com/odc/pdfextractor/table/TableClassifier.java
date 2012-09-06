@@ -1,10 +1,11 @@
-package com.odc.pdfextractor.transaction;
+package com.odc.pdfextractor.table;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import com.odc.pdfextractor.table.cloumn.ColumnHeader;
 
 public class TableClassifier {
 	
@@ -13,16 +14,24 @@ public class TableClassifier {
 		DEBIT,
 		CREDIT,
 		DEBIT_CREDIT,
-		CHECK,
+		CHECK, UNKNOWN,
 	
 	}
 	
-	public static TableType getTableType (String tableHeader) {
+	public static TableType getTableType (String tableHeader, Set<ColumnHeader> headerTypes) {
 		Set<TableType> possibleTypes = new HashSet<TableType>();
+		for (ColumnHeader word : headerTypes) {
+			if (tableMap.containsKey(word)) {
+				possibleTypes.add(tableMap.get(word));
+			}
+		}
 		for (String word : tableHeader.split(" ")) {
 			if (tableMap.containsKey(word)) {
 				possibleTypes.add(tableMap.get(word));
 			}
+		}
+		if (possibleTypes.isEmpty()) {
+			return TableType.UNKNOWN;
 		}
 		if (possibleTypes.size() == 1) {
 			return possibleTypes.iterator().next();
@@ -62,6 +71,7 @@ public class TableClassifier {
 	      put("withdrawals/debits", TableType.DEBIT);
 	      put("payments", TableType.DEBIT);
 	      put("service charges", TableType.DEBIT);
+	      put("charges", TableType.DEBIT);
 	      
 	      put("credits", TableType.CREDIT);
 	      put("credit", TableType.CREDIT);
@@ -77,6 +87,7 @@ public class TableClassifier {
 	      put("check no.", TableType.CHECK);
 	      put("check#", TableType.CHECK);
 	      put("check #", TableType.CHECK);
+	      put("check_number", TableType.CHECK);
 	      
 	      
 	      put("balance", TableType.BALANCE);

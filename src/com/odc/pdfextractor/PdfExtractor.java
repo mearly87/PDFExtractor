@@ -6,19 +6,20 @@ import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import com.odc.pdfextractor.model.DocumentLocation;
 import com.odc.pdfextractor.model.StringLocation;
+import com.odc.pdfextractor.model.Transaction;
+import com.odc.pdfextractor.model.Transaction.TransactionType;
 import com.odc.pdfextractor.parser.CleanPdfParser;
 import com.odc.pdfextractor.parser.DirtyPdfParser;
 import com.odc.pdfextractor.parser.PdfParser;
-import com.odc.pdfextractor.transaction.Transaction;
-import com.odc.pdfextractor.transaction.Transaction.TransactionType;
-import com.odc.pdfextractor.transaction.TransactionBuilder;
+import com.odc.pdfextractor.table.TableClassifier;
+import com.odc.pdfextractor.table.TableClassifier.TableType;
+import com.odc.pdfextractor.table.cloumn.ColumnHeader;
 
 
 public class PdfExtractor
@@ -40,18 +41,16 @@ public class PdfExtractor
     }
     Calendar startTime = Calendar.getInstance();
     long start = startTime.getTimeInMillis();
-    List<Map<StringLocation, StringLocation>> transMap = getTransactions(filename);
+    List<Transaction> transactions = getTransactionList(filename);
     Calendar endTime = Calendar.getInstance();
     long end = endTime.getTimeInMillis();
     System.out.println("Retrieved in " + (double) ((end - start)) / 1000 + " seconds");
-    List<Transaction> transactions = new ArrayList<Transaction>();
-    for (Map<StringLocation, StringLocation> trans : transMap) {
-      transactions.add(TransactionBuilder.getTransaction(trans));
-    }
+    System.out.println("# of Transactions: " + transactions.size());
     // TODO
     SimpleDateFormat simpleDateformat = new SimpleDateFormat("MMM");
     Map<String, Map<TransactionType, List<Transaction>>> transByMonth = new HashMap<String, Map<TransactionType, List<Transaction>>>();
     for (Transaction trans : transactions) {
+    	System.out.println(trans);
     	if (trans.getDate() != null) {
 	    	String month = simpleDateformat.format(trans.getDate());
 	    	if (!transByMonth.containsKey(month)) {
@@ -81,23 +80,31 @@ public class PdfExtractor
 					prevBalanceDate = currBalanceDate;
 					currBalanceDate = Calendar.getInstance();
 					currBalanceDate.setTime(t.getDate());
-					if (prevBalanceDate != null) {
+					if (prevBalanceDate != null ) {
+						try {
 						balance += lastTransaction.getResultingBalance() * (currBalanceDate.get(Calendar.DAY_OF_MONTH) - prevBalanceDate.get(Calendar.DAY_OF_MONTH));
+						} catch (NullPointerException e) {
+							
+						}
 					}
 				}
 				lastTransaction = t;
 			}
 			System.out.print(" Total: " + total);
 			if (currBalanceDate != null) {
-				balance += lastTransaction.getResultingBalance() * (currBalanceDate.getActualMaximum(Calendar.DAY_OF_MONTH) + 1 - currBalanceDate.get(Calendar.DAY_OF_MONTH));
+				try {
+					balance += lastTransaction.getResultingBalance() * (currBalanceDate.getActualMaximum(Calendar.DAY_OF_MONTH) + 1 - currBalanceDate.get(Calendar.DAY_OF_MONTH));
+				} catch (NullPointerException e) {
+					
+				}
 				System.out.print(" Average Balance: " + balance / currBalanceDate.getActualMaximum(Calendar.DAY_OF_MONTH));
 			}
 			System.out.println();
 		}
     }
   }
-
-  private static List<Map<StringLocation, StringLocation>> getTransactions(String filename) throws IOException, Exception
+  
+  public static List<Transaction> getTransactionList(String filename) throws IOException, Exception
   {
     PdfParser converter;
     if (filename.toLowerCase().endsWith(".pdf")) {
@@ -107,25 +114,39 @@ public class PdfExtractor
       converter = new DirtyPdfParser();
     }
     DocumentLocation doc = converter.processPdf(filename);
+    System.out.println(doc);
     converter = null;
     
     List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
     List<StringLocation> groupedDates = StringLocationHelper.combineSimilarItems(dateLocations, 0);
-    List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, Constants.dateRegEx, groupedDates);
+    List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, groupedDates);
 
-    List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();
+    List<Transaction> transactions = new ArrayList<Transaction>();
     
     for (StringLocation dateColumn : dateCols) {
       StringLocation headers = StringLocationHelper.getHeaders(doc, dateColumn);
       if (headers != null) {
-        StringLocation tableName = doc.getLocation(headers.getPage(), headers.getTop() - 25, headers.getTop(), Location.ALIGNMENT.bottom);
+
         
-        Map<StringLocation, StringLocation> headerToDataCol = StringLocationHelper.getHeaderToDataMap(doc, dateColumn, headers);
+        Map<ColumnHeader, StringLocation> headerToDataCol = StringLocationHelper.getHeaderToDataMap(doc, dateColumn, headers);
+        TableType tableName = getTableName(doc, headers, headerToDataCol);
         List<StringLocation> dates = dateColumn.getLocations();
-        transactions.addAll(StringLocationHelper.getTransactions(tableName, headerToDataCol, dates));
+        transactions.addAll(StringLocationHelper.getTransactionList(tableName, headerToDataCol, dates));
       }
     }
-    System.out.println("# of Transactions: " + transactions.size());
     return transactions;
   }
+
+private static TableType getTableName(DocumentLocation doc,
+		StringLocation headers, Map<ColumnHeader, StringLocation> headerToDataCol) {
+	TableType tableType = TableType.UNKNOWN;
+	int search = 20;
+		while (tableType == TableType.UNKNOWN && search < 50) {
+			StringLocation tableName = doc.getLocation(headers.getPage(), headers.getTop() - search, headers.getTop(), Location.ALIGNMENT.bottom);
+			tableType = TableClassifier.getTableType(tableName.toString(), headerToDataCol.keySet());
+			search+= 5;
+		}
+	return tableType;
+	}
+  
 }

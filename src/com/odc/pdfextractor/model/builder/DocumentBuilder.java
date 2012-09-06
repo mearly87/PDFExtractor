@@ -8,13 +8,10 @@ import java.util.TreeSet;
 
 import com.odc.pdfextractor.Constants;
 import com.odc.pdfextractor.Location;
-import com.odc.pdfextractor.comparator.LeftToRightComparator;
 import com.odc.pdfextractor.comparator.TopToBottomComparator;
 import com.odc.pdfextractor.model.CharacterLocation;
 import com.odc.pdfextractor.model.DocumentLocation;
 import com.odc.pdfextractor.model.StringLocation;
-import com.odc.pdfextractor.model.StringLocation;
-
 public class DocumentBuilder
 {
   private Comparator<Location> topToBottom = new TopToBottomComparator();

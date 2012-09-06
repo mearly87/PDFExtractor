@@ -1,8 +1,10 @@
-package com.odc.pdfextractor.transaction;
+package com.odc.pdfextractor.model;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Formatter;
+
+import com.odc.pdfextractor.table.TableClassifier.TableType;
 
 public class Transaction
 {
@@ -28,22 +30,51 @@ public class Transaction
   {
     this.type = type;
   }
+  
+  public void setType(TableType type) {
+	  if (type == null) {
+		  return;
+	  }
+    if (type == TableType.CREDIT) {
+    	setType(TransactionType.CREDIT);
+    } else if (type == TableType.DEBIT) {
+    	setType(TransactionType.DEBIT);
+    	if (amount != null && amount >=0) {
+    		amount = amount * -1;
+    	}
+    } else if (type == TableType.BALANCE) {
+    	setType(TransactionType.BALANCE);
+    }	else if (type == TableType.CHECK) {
+    	setType(TransactionType.CHECK);
+    	if (amount != null && amount >=0) {
+    		amount = amount * -1;
+    	}
+    }
+  }
+  
   public Double getAmount()
   {
     return amount;
   }
-  public void setAmount(Double amount)
-  {
-    this.amount = amount;
-  }
   
   public boolean setAmount(String amount)
   {
-    String amountStriped = amount.replaceAll("[^0-9|.]", "");
+	  int sign = 1;
+	  if (amount.contains("-") || type == TransactionType.DEBIT || type == TransactionType.CHECK) {
+		  sign = -1;
+	  }
+	  // Get rid of extra stuff, and only accept the first number in the amount string
+    String amountStriped = amount.split(" ")[0].replaceAll("[^0-9|.]", "");
     try {
-      this.amount = Double.parseDouble(amountStriped);
+      this.amount = sign * Double.parseDouble(amountStriped);
+      if (getType() == TransactionType.BALANCE) {
+	      	if (getResultingBalance() == null) {
+	      		setResultingBalance(getAmount());
+	      	}
+	      }
       return true;
     } catch(Exception s) {
+     System.out.println(amountStriped);
       return false;
     }
   }
