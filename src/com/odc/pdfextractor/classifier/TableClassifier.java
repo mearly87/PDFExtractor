@@ -1,27 +1,22 @@
-package com.odc.pdfextractor.table;
+package com.odc.pdfextractor.classifier;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.odc.pdfextractor.table.cloumn.ColumnHeader;
+import com.odc.pdfextractor.enumeration.HeaderType;
+import com.odc.pdfextractor.enumeration.TableType;
+
 
 public class TableClassifier {
 	
-	public enum TableType {
-		BALANCE,
-		DEBIT,
-		CREDIT,
-		DEBIT_CREDIT,
-		CHECK, UNKNOWN,
+
 	
-	}
-	
-	public static TableType getTableType (String tableHeader, Set<ColumnHeader> headerTypes) {
+	public static TableType getTableType (String tableHeader, Set<HeaderType> headerTypes) {
 		Set<TableType> possibleTypes = new HashSet<TableType>();
-		for (ColumnHeader word : headerTypes) {
-			if (tableMap.containsKey(word)) {
+		for (HeaderType word : headerTypes) {
+			if (tableMap.containsKey(word.toString())) {
 				possibleTypes.add(tableMap.get(word));
 			}
 		}

@@ -7,10 +7,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import com.odc.pdfextractor.Constants;
-import com.odc.pdfextractor.Location;
 import com.odc.pdfextractor.comparator.TopToBottomComparator;
 import com.odc.pdfextractor.model.CharacterLocation;
 import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.Location;
 import com.odc.pdfextractor.model.StringLocation;
 public class DocumentBuilder
 {
@@ -24,7 +24,6 @@ public class DocumentBuilder
 
   public DocumentBuilder(int error, Comparator<Location> comparator) { 
     this.error = error;
-    // this.comparator = comparator;
     word = new ArrayList<StringLocation>();
     text = new ArrayList<StringLocation>();
     page = new TreeSet<StringLocation>(topToBottom);

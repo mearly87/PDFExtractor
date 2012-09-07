@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.odc.pdfextractor.Location;
 import com.odc.pdfextractor.comparator.TopToBottomComparator;
 
 public abstract class AbstractStringLocation implements Location

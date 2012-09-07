@@ -1,4 +1,4 @@
-package com.odc.pdfextractor;
+package com.odc.pdfextractor.model;
 
 import java.util.Collection;
 

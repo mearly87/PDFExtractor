@@ -1,12 +1,13 @@
 package com.odc.pdfextractor.model;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Formatter;
 
-import com.odc.pdfextractor.table.TableClassifier.TableType;
+import com.odc.pdfextractor.enumeration.TableType;
 
-public class Transaction
+public class Transaction implements Comparable<Transaction>
 {
   public enum TransactionType {
     BALANCE,
@@ -19,7 +20,7 @@ public class Transaction
   private TransactionType type;
   private Double amount;
   private Double balance;
-  private Date date;
+  private Calendar date;
   private String description;
   
   public TransactionType getType()
@@ -89,21 +90,24 @@ public class Transaction
   }
   public Date getDate()
   {
-    return date;
+	  if (date == null)
+		  return null;
+    return date.getTime();
   }
   
   public String getDateString()
   {
     if(date != null) {
       SimpleDateFormat format = new SimpleDateFormat("MM/dd");
-      return format.format(date);
+      return format.format(date.getTime());
     }
     return "0/00";
   }
   
   public void setDate(Date date)
   {
-    this.date = date;
+	this.date = Calendar.getInstance();
+	this.date.setTime(date);
   }
   public String getDescription()
   {
@@ -140,6 +144,32 @@ public class Transaction
     } catch (NumberFormatException e) {
     	System.out.println("Error parsing amount");
     }
+  }
+  
+  @Override
+  public int compareTo(Transaction trans) {
+	  if (this.date == null) {
+		  if (trans.date == null) {
+			  return 0;
+		  } else {
+			  return -1;
+		  }
+	  } else if (trans.date == null) {
+		  return 1;
+	  }
+	  int dateComparison = this.date.compareTo(trans.date);
+	  if (this.date.compareTo(trans.date) != 0) {
+		  return dateComparison;
+	  }
+	  if (this.type == trans.type) {
+		  return 0;
+	  } if (this.type == TransactionType.BALANCE) {
+		  return 1;
+	  } if (trans.type == TransactionType.BALANCE) {
+		  return 0;
+	  }
+	return 0;
+	  
   }
   
   

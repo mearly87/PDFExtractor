@@ -10,9 +10,9 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-import com.odc.pdfextractor.PdfExtractor;
 import com.odc.pdfextractor.model.Transaction;
 import com.odc.pdfextractor.model.Transaction.TransactionType;
+import com.odc.pdfextractor.model.builder.TransactionBuilder;
 
 public class BankStatementTest {
 	
@@ -72,9 +72,21 @@ public class BankStatementTest {
 		transTypeExpected.put(TransactionType.UNKNOWN, new Integer(0));
 		runTest("US_BANK_ALL_PAGES.pdf", 556, 66357, 3365704, transTypeExpected);
 	}
+	
+	@Test
+	public void USBank1Test() throws IOException, Exception {
+		Map<TransactionType, Integer> transTypeExpected = new HashMap<TransactionType, Integer>();
+		transTypeExpected.put(TransactionType.DEBIT, new Integer(132));
+		transTypeExpected.put(TransactionType.CREDIT, new Integer(349));
+		transTypeExpected.put(TransactionType.CHECK, new Integer(227));
+		transTypeExpected.put(TransactionType.BALANCE, new Integer(62));
+		transTypeExpected.put(TransactionType.UNKNOWN, new Integer(0));
+		runTest("US_BANK_ALL_PAGES_1.pdf", 770, 1960, 193570, transTypeExpected);
+	}
 
 	private void runTest(String filename, int transactionsExpected, int amountExpected, int balanceExpected, Map<TransactionType, Integer> transTypeExpected) throws IOException, Exception {
-		List<Transaction> transactions = PdfExtractor.getTransactionList(filename);
+		TransactionBuilder builder = new TransactionBuilder(filename);
+		List<Transaction> transactions = builder.getTransactionList();
 
 		int amountCount = 0;
 		int balanceCount = 0;
