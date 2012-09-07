@@ -63,6 +63,17 @@ public class BankStatementTest {
 	}
 	
 	@Test
+	public void capital1Test() throws IOException, Exception {
+		Map<TransactionType, Integer> transTypeExpected = new HashMap<TransactionType, Integer>();
+		transTypeExpected.put(TransactionType.DEBIT, new Integer(233));
+		transTypeExpected.put(TransactionType.CREDIT, new Integer(147));
+		transTypeExpected.put(TransactionType.CHECK, new Integer(56));
+		transTypeExpected.put(TransactionType.BALANCE, new Integer(0));
+		transTypeExpected.put(TransactionType.UNKNOWN, new Integer(0));
+		runTest("CAPITAL_ONE_ALL_PAGES_1.pdf", 436, -245627, 6352997, transTypeExpected);
+	}
+	
+	@Test
 	public void USBankTest() throws IOException, Exception {
 		Map<TransactionType, Integer> transTypeExpected = new HashMap<TransactionType, Integer>();
 		transTypeExpected.put(TransactionType.DEBIT, new Integer(278));
@@ -109,5 +120,7 @@ public class BankStatementTest {
 		assertEquals(transTypeCount, transTypeExpected);
 
 	}
+	
+	
 
 }

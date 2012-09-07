@@ -4,16 +4,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.ibm.icu.text.DateFormatSymbols;
 import com.odc.pdfextractor.model.MonthSummary;
 import com.odc.pdfextractor.model.Transaction;
-import com.odc.pdfextractor.model.Transaction.TransactionType;
 
 public class SummaryBuilder {
 	

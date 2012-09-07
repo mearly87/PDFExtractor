@@ -2,7 +2,7 @@ package com.odc.pdfextractor.model;
 
 import java.util.Formatter;
 
-import com.ibm.icu.text.DateFormatSymbols;
+import com.odc.pdfextractor.Constants;
 import com.odc.pdfextractor.model.builder.MonthSummaryBuilder;
 
 public class MonthSummary {
@@ -98,8 +98,10 @@ public class MonthSummary {
 
 
 	public String toString() {
+		if (month == -1)
+			return "";
 		StringBuilder result = new StringBuilder();
-		String monthString = new DateFormatSymbols().getMonths()[month];
+		String monthString = Constants.MONTHS[month];
 		Formatter formatter = new Formatter(result);
 		result.append("\n################################\n");
 	    formatter.format("%-13s %-7.3s %s%n", "##########", monthString, "##########");
@@ -108,10 +110,16 @@ public class MonthSummary {
 	    formatter.format("%-20s %d%n", "Number Of Debits: ", numberOfDebits);
 	    formatter.format("%-20s %s%(.2f%n", "Total Debits: ", "$", totalDebitAmount);
 	    formatter.format("%-20s %d%n", "Number Of Credits: ", numberOfCredits);
-	    formatter.format("%-20s %s%(.2f%n", "Total Creits: ", "$", totalCreditAmount);
+	    formatter.format("%-20s %s%(.2f%n", "Total Credits: ", "$", totalCreditAmount);
 	    formatter.format("%-20s %d%n", "Number Of Checks: ", numberOfChecks);
 	    formatter.format("%-20s %s%(.2f%n", "Total Checks: ", "$", totalCheckAmount);
 		return result.toString();
 	}
 
+	public boolean equals(MonthSummary summary) {
+		return month == summary.month && Math.abs(averageBalance - summary.averageBalance) < .01 &&
+				numberOfDebits == summary.numberOfDebits && Math.abs(totalDebitAmount- summary.totalDebitAmount) < .01 &&
+						numberOfCredits == summary.numberOfCredits && Math.abs(totalCreditAmount - summary.totalCreditAmount) < .01 &&
+								numberOfChecks == summary.numberOfChecks && Math.abs(totalCheckAmount - summary.totalCheckAmount) < .01;
+	}
 }

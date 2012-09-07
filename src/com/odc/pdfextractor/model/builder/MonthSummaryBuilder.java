@@ -19,7 +19,7 @@ public class MonthSummaryBuilder {
 	private double totalCheckAmount;
 	private double averageBalance;
 	private double totalBalance;	
-	private int month;
+	private int month = -1;
 	
 	Calendar lastDate = null;
 	Double lastBalance;
@@ -28,6 +28,7 @@ public class MonthSummaryBuilder {
 	public MonthSummaryBuilder(Integer month) {
 		this.month = month;
 	}
+	
 
 	public void addToBalance(Double resultingBalance, Calendar date) {
 		if ( resultingBalance != null && date != null) {
