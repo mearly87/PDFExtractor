@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="http://www.pdfexctractor.com/XMLSchema" xmlns="http://www.pdfexctractor.com/XMLSchema" elementFormDefault="qualified">
+
+<xs:complexType name="DataField">
+	<xs:sequence>
+		<xs:element name="Label" type="xs:string"/>
+		<xs:element name="xCord" type="xs:int"/>
+		<xs:element name="yCord" type="xs:int"/>
+	</xs:sequence>
+</xs:complexType>
+
+<xs:element name="BankStatement">
+	<xs:complexType>
+	<xs:sequence>
+		<xs:element name="StartingBalance" type="DataField" minOccurs="0"/>
+	</xs:sequence>
+	</xs:complexType>
+</xs:element>
+	
+</xs:schema>

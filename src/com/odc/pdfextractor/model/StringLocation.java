@@ -1,6 +1,13 @@
 package com.odc.pdfextractor.model;
 
+import java.awt.Graphics;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.odc.pdfextractor.comparator.TopToBottomComparator;
+import com.odc.pdfextractor.model.Location.ALIGNMENT;
 
 public class StringLocation extends AbstractStringLocation
 {
@@ -37,4 +44,21 @@ public class StringLocation extends AbstractStringLocation
       return page;
     }
      
+	public void draw(Graphics g, int xOffSet, int yOffSet, double xScale, double yScale) {
+		for (StringLocation l : getLocations()) {
+			l.draw(g, xOffSet, yOffSet, xScale, yScale);
+		}
+	}
+
+	public List<StringLocation> getLocations(int left, int top, int right, int bottom) {
+		List<StringLocation> result = new ArrayList<StringLocation>();
+		for (StringLocation loc : getLocations()) {
+			result.addAll(loc.getLocations(left, top, right, bottom));
+		}
+		Collections.sort(result, new TopToBottomComparator());
+		return result;
+	}
+	public StringLocation getLocation(int left, int top, int right, int bottom) {
+		return new StringLocation(getLocations(left, top, right, bottom));
+	}
 }

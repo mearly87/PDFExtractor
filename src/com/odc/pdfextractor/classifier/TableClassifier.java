@@ -2,22 +2,25 @@ package com.odc.pdfextractor.classifier;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import com.odc.pdfextractor.enumeration.HeaderType;
 import com.odc.pdfextractor.enumeration.TableType;
+import com.odc.pdfextractor.model.DataTable;
+import com.odc.pdfextractor.model.Header;
 
 
 public class TableClassifier {
 	
 
 	
-	public static TableType getTableType (String tableHeader, Set<HeaderType> headerTypes) {
+	public static TableType getTableType (String tableHeader, DataTable headerTypes) {
 		Set<TableType> possibleTypes = new HashSet<TableType>();
-		for (HeaderType word : headerTypes) {
-			if (tableMap.containsKey(word.toString())) {
-				possibleTypes.add(tableMap.get(word));
+		for (Header header : headerTypes.keySet()) {
+			if (tableMap.containsKey(header)) {
+				possibleTypes.add(tableMap.get(header));
 			}
 		}
 		for (String word : tableHeader.split(" ")) {

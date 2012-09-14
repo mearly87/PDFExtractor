@@ -1,5 +1,9 @@
 package com.odc.pdfextractor.model;
 
+import java.awt.Graphics;
+import java.util.ArrayList;
+import java.util.List;
+
 
 public class CharacterLocation extends StringLocation {
 
@@ -43,5 +47,22 @@ public class CharacterLocation extends StringLocation {
   public boolean matches(String regex) {
     return String.valueOf(character).matches(regex);
   }
+  @Override
+  public void draw(Graphics g, int xOffSet, int yOffSet, double xScale, double yScale) {
+	  int x = (int) Math.round((xOffSet + getLeft()) * xScale);
+	  int y = (int) Math.round((yOffSet + getTop()) * yScale);
+	g.drawChars(new char[]{character}, 0, 1, x, y);
+  }
 
+	public List<StringLocation> getLocations(int left, int top, int right, int bottom) {
+		List<StringLocation> result = new ArrayList<StringLocation>();
+	      boolean isAfterH = left > this.getRight();
+	      boolean isBeforeH = right < this.getLeft();
+	      boolean isAfterV = top > this.getBottom();
+	      boolean isBeforeV = bottom < this.getTop();
+		if(!isAfterH && !isBeforeH  && !isAfterV && !isBeforeV ) {
+			result.add(this);
+		}
+		return result;
+	}
 }

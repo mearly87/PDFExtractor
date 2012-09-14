@@ -15,7 +15,10 @@ import com.odc.pdfextractor.comparator.LeftToRightComparator;
 import com.odc.pdfextractor.comparator.StartsAfterVerticallyComparator;
 import com.odc.pdfextractor.enumeration.HeaderType;
 import com.odc.pdfextractor.enumeration.TableType;
+import com.odc.pdfextractor.graphics.PdfExtractorViewer;
+import com.odc.pdfextractor.model.DataTable;
 import com.odc.pdfextractor.model.DocumentLocation;
+import com.odc.pdfextractor.model.Header;
 import com.odc.pdfextractor.model.Location;
 import com.odc.pdfextractor.model.StringLocation;
 import com.odc.pdfextractor.model.Transaction;
@@ -48,23 +51,25 @@ public class TransactionBuilder
     List<StringLocation> dateCols = getDateColumns(groupedDates);
 
     List<Transaction> transactions = new ArrayList<Transaction>();
-    
+    List<DataTable> headerList = new ArrayList<DataTable>();
     for (StringLocation dateColumn : dateCols) {
       StringLocation headers = getHeaders(doc, dateColumn);
       if (headers != null) {
-
+    	// headerList.add(headers);
         
-        Map<HeaderType, StringLocation> headerToDataCol = getHeaderToDataMap(dateColumn, headers);
-        TableType tableName = getTableName(doc, headers, headerToDataCol);
+        DataTable dataTable = getHeaderToDataMap(dateColumn, headers);
+        headerList.add(dataTable);
+        TableType tableName = getTableName(doc, dataTable);
         List<StringLocation> dates = dateColumn.getLocations();
-        transactions.addAll(getTransactionList(tableName, headerToDataCol, dates));
+        transactions.addAll(getTransactionList(tableName, dataTable, dates));
       }
     }
+    PdfExtractorViewer.display(doc, headerList);
     return transactions;
   }
 
 private List<Transaction> getTransactionList(TableType tableType,
-	      Map<HeaderType, StringLocation> headerToDataCol, List<StringLocation> dates)
+	      DataTable headerToDataCol, List<StringLocation> dates)
 	  {
 	    List<Transaction> transactions = new ArrayList<Transaction>();
 	    
@@ -77,10 +82,10 @@ private List<Transaction> getTransactionList(TableType tableType,
 	      
 	      Transaction trans = new Transaction();
 	      trans.setType(tableType);
-	      for (HeaderType header : headerToDataCol.keySet()) {
+	      for (Header header: headerToDataCol.keySet() ) {
 	        StringLocation transDataCol = headerToDataCol.get(header);
 	        StringLocation transData = ((StringLocation) transDataCol).getLocation(lower, upper, Location.ALIGNMENT.verticalCenter);
-	        ColumnHandler handler = header.getHandler();
+	        ColumnHandler handler = header.getType().getHandler();
 	        if(transData != null) {
 	          handler.handleColumn(trans, transData);
 	        } 
@@ -101,10 +106,10 @@ private List<Transaction> getTransactionList(TableType tableType,
   
   
 
-  private Map<HeaderType, StringLocation> getHeaderToDataMap(StringLocation dateColumn,
+  private DataTable getHeaderToDataMap(StringLocation dateColumn,
       StringLocation headers)
   {
-    Map<HeaderType, StringLocation> headerToDataCol = new HashMap<HeaderType, StringLocation>();
+    Map<Header, StringLocation> headerToDataCol = new HashMap<Header, StringLocation>();
     StringLocation data = doc.getLocation(dateColumn.getPage(), dateColumn.getTop(), dateColumn.getBottom(), Location.ALIGNMENT.verticalCenter);
     Map<String, HeaderType> keywordMap = HeaderClassifier.INSTANCE;
     data = data.getLocationUnder(headers);
@@ -121,10 +126,10 @@ private List<Transaction> getTransactionList(TableType tableType,
      	} else {
      		colDataLocation = data.getLocationUnder(header);
      	}
-    	headerToDataCol.put(headerType, colDataLocation);
+    	headerToDataCol.put(new Header(headerType, header), colDataLocation);
      }
     }
-    return headerToDataCol;
+    return new DataTable(headerToDataCol);
   }
 
   private StringLocation getHeaders(DocumentLocation data, StringLocation dateColumn) {
@@ -267,12 +272,13 @@ private Map<HeaderType, List<StringLocation>> groupHeaders(
 
 
 private TableType getTableName(DocumentLocation doc,
-			StringLocation headers, Map<HeaderType, StringLocation> headerToDataCol) {
+			DataTable headerToDataCol) {
 		TableType tableType = TableType.UNKNOWN;
+		StringLocation headers = new StringLocation(headerToDataCol.keySet());
 		int search = 20;
 			while (tableType == TableType.UNKNOWN && search < 50) {
 				StringLocation tableName = doc.getLocation(headers.getPage(), headers.getTop() - search, headers.getTop(), Location.ALIGNMENT.bottom);
-				tableType = TableClassifier.getTableType(tableName.toString(), headerToDataCol.keySet());
+				tableType = TableClassifier.getTableType(tableName.toString(), headerToDataCol);
 				search+= 5;
 			}
 		return tableType;

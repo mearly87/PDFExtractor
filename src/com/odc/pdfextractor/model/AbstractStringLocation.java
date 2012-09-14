@@ -1,5 +1,6 @@
 package com.odc.pdfextractor.model;
 
+import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;

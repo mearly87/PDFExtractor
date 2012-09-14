@@ -26,7 +26,7 @@ public class PdfExtractor
         return;
       }
     }
-    
+
     TransactionBuilder tranBuilder = new TransactionBuilder(filename);
     List<Transaction> transactions = tranBuilder.getTransactionList();
     SummaryBuilder sumBuilder = new SummaryBuilder(transactions);
