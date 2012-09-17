@@ -132,6 +132,8 @@ bofa.xml
 dirty.xml
 mahout-core-0.7.jar
 output.txt
+*.class
+target
 
 #############
 ## Python
