@@ -2,7 +2,7 @@ package com.odc.pdfextractor.comparator;
 
 import java.util.Comparator;
 
-import com.odc.pdfextractor.Location;
+import com.odc.pdfextractor.model.Location;
 
 public class TopToBottomComparator implements Comparator<Location>
 {

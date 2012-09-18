@@ -1,18 +1,12 @@
 package com.odc.pdfextractor;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.List;
-import java.util.Map;
 
-import com.odc.pdfextractor.model.DocumentLocation;
-import com.odc.pdfextractor.model.StringLocation;
-import com.odc.pdfextractor.parser.CleanPdfParser;
-import com.odc.pdfextractor.parser.DirtyPdfParser;
-import com.odc.pdfextractor.parser.PdfParser;
+import com.odc.pdfextractor.model.Transaction;
+import com.odc.pdfextractor.model.builder.SummaryBuilder;
+import com.odc.pdfextractor.model.builder.TransactionBuilder;
 
 
 public class PdfExtractor
@@ -32,42 +26,11 @@ public class PdfExtractor
         return;
       }
     }
-    Calendar startTime = Calendar.getInstance();
-    long start = startTime.getTimeInMillis();
-    printTransactions(filename);
-    Calendar endTime = Calendar.getInstance();
-    long end = endTime.getTimeInMillis();
-    System.out.println("Retrieved in " + (double) ((end - start)) / 1000 + " seconds");
+
+    TransactionBuilder tranBuilder = new TransactionBuilder(filename);
+    List<Transaction> transactions = tranBuilder.getTransactionList();
+    SummaryBuilder sumBuilder = new SummaryBuilder(transactions);
+    sumBuilder.createSummary();
   }
-
-  private static void printTransactions(String filename) throws IOException, Exception
-  {
-    PdfParser converter;
-    if (filename.toLowerCase().endsWith(".pdf")) {
-      converter = new CleanPdfParser();
-
-    } else {
-      converter = new DirtyPdfParser();
-    }
-    DocumentLocation doc = converter.processPdf(filename);
-
-    converter = null;
-    
-    List<StringLocation> dateLocations = (doc).applyRegEx(Constants.dateRegEx);
-    List<StringLocation> groupedDates = StringLocationHelper.combineInlineItems(dateLocations, 2);
-    List<StringLocation> dateCols = StringLocationHelper.getDateColumns(doc, Constants.dateRegEx, groupedDates);
-
-    List<Map<StringLocation, StringLocation>> transactions = new ArrayList<Map<StringLocation, StringLocation>>();
-    
-    for (StringLocation dateColumn : dateCols) {
-      StringLocation headers = StringLocationHelper.getHeaders(doc, dateColumn);
-      Location tableName = doc.getLocation(headers.getPage(), headers.getTop() - 15, headers.getTop(), Location.ALIGNMENT.bottom);
-      
-      Map<StringLocation, StringLocation> headerToDataCol = StringLocationHelper.getHeaderToDataMap(doc, dateColumn, headers);
-      List<StringLocation> dates = dateColumn.getLineLocations();
-      transactions.addAll(StringLocationHelper.getTransactions(tableName, headerToDataCol, dates));
-    }
-
-    System.out.println("# of Transactions: " + transactions.size());
-  }
+  
 }

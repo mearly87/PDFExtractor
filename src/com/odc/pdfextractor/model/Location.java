@@ -1,4 +1,6 @@
-package com.odc.pdfextractor;
+package com.odc.pdfextractor.model;
+
+import java.util.Collection;
 
 public interface Location
 {
@@ -31,5 +33,7 @@ public interface Location
   boolean hasPoint(int x, int y);
   
   boolean matches(String RegEx);
+
+  Collection<Integer> getPages();
 
 }

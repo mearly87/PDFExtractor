@@ -1,202 +1,67 @@
 package com.odc.pdfextractor.model;
 
+import java.awt.Graphics;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Set;
 
-import com.odc.pdfextractor.Location;
-import com.odc.pdfextractor.StringLocationHelper;
-import com.odc.pdfextractor.Location.ALIGNMENT;
-import com.odc.pdfextractor.model.builder.StringLocationBuilder;
 
-public class DocumentLocation implements Location
+public class DocumentLocation extends AbstractStringLocation
 {
 
-  private int right = Integer.MIN_VALUE;
-  private int left = Integer.MAX_VALUE;
-  private int bottom = Integer.MIN_VALUE;
-  private int top = Integer.MAX_VALUE;
-  private List<Integer> pages = new ArrayList();;
-  private List<StringLocation> locations = new ArrayList<StringLocation>();
-  private int size = 0;
-  private boolean addSpace = false;
+  private Set<Integer> pages = new HashSet<Integer>();
 
     public DocumentLocation(StringLocation loc) {
-      this.addLocation(loc);
+      super(loc);
+      if (loc.getPage() != -1) {
+       pages.add(loc.getPage()); 
+      }
     }
-  
-    public DocumentLocation()
+    
+    public DocumentLocation(List<? extends StringLocation> stringLocations)
     {
-      // TODO Auto-generated constructor stub
-    }
-    
-
-    public String toString() {
-      StringBuilder word = new StringBuilder();
-      for (Location loc : locations) {
-        word.append(loc.toString());
-      }
-      return word.toString() + " ";
-    }
-    
-    public String fullPrint() {
-      StringBuilder word = new StringBuilder();
-      for (ImmutableLocation loc : locations) {
-        word.append(loc.fullPrint());
-      }
-      return word.toString() + "(page: " + pages.get(0) + "-" + pages.get(pages.size() - 1) + ", left: " + left + ", right: " + right + ", top: " + top + ", bottom: " + bottom + ")\n";
-    }
-
-
-    public int getRight()
-    {
-      return right;
-    }
-
-    public int getLeft()
-    {
-      return left;
-    }
-
-    public int getBottom()
-    {
-      return bottom;
-    }
-    
-    public int getTop()
-    {
-      return top;
-    }
-    
-    
-    public void addLocation(StringLocation loc) {
-      if (loc == null) {
-        return;
-      }
-      if (!pages.contains(loc.getPage())) {
-        pages.add(loc.getPage());
-      }
-      if (loc.getLeft() < left) {
-        left = loc.getLeft();
-      }
-      if (loc.getRight() > right) {
-        right = loc.getRight();
-      }
-      if (loc.getTop() < top) {
-        top = loc.getTop();
-      }
-      if (loc.getBottom() > bottom) {
-        bottom = loc.getBottom();
-      }
-      size = size + loc.size();
-      locations.add(loc);
-    }
-    
-    public List<StringLocation> getLocations() {
-      return Collections.unmodifiableList(locations);
-    }
-    
-    public int size() {
-      return size + 1;
-    }
-
-    public int getPosition(Location.ALIGNMENT alignment) throws RuntimeException {
-      switch (alignment) {
-      case left:
-        return left;
-      case right:
-        return right;
-      case top:
-        return top;
-      case bottom:
-        return bottom;
-      case horizontalCenter:
-        return (left + right) / 2;
-      case verticalCenter:
-        return (top + bottom) / 2;
-      }
-      throw new RuntimeException("Invalid alignment: " + alignment);
-        
-    }
-
-    public int getPage()
-    {
-      return pages.size();
-    }
-    
-    public List<StringLocation> applyRegEx(String regEx) {
-      Pattern date2 = Pattern.compile(regEx);
-      Matcher matcher = date2.matcher(this.toString());
-      List<StringLocation> locs = new ArrayList<StringLocation>();
-      while(matcher.find()) {
-        StringLocation loc = substring(matcher.start(), matcher.end());
-        if (loc != null) {
-          locs.add(loc);
+      super(stringLocations);
+      for (StringLocation loc : stringLocations) {
+        if (loc.getPage() != -1) {
+          pages.add(loc.getPage());
         }
       }
-      return locs;
-    }
-
-    public StringLocation substring(int start, int end) {
-      List<StringLocation> locations = new ArrayList<StringLocation>();
-      int charPointer = 0;
-      for (ImmutableLocation loc : this.locations) { 
-        if (start >= end) {
-          return new StringLocation(locations);
-        }
-        if (start <= charPointer && charPointer < end || 
-            start < charPointer + loc.size() && charPointer + loc.size() < end || 
-            start > charPointer && charPointer + loc.size() >= end) {
-          int endIndex = Math.min(loc.size(), end - charPointer);
-          int startIndex = start - charPointer;
-
-          StringLocation newLoc = loc.substring(startIndex, endIndex);
-          locations.add(newLoc);
-          start = start + newLoc.size();
-        } 
-        charPointer = charPointer + loc.size();
-      }
-      return new StringLocation(locations);
-    }
-
-    public void addLocations(List<StringLocation> locations)
-    {
-      for (StringLocation l : locations) {
-        addLocation(l);
-      }
-      
     }
     
     public List<StringLocation> getLocations(int page, int lower, int upper, Location.ALIGNMENT alignment) {
       List<StringLocation> result = new ArrayList<StringLocation>();
-      for (StringLocation l : locations) {
+      for (StringLocation l : getLocations()) {
         if (page != -1 && l.getPage() == page)
             result.addAll(l.getLocations(lower, upper, alignment));
       }
       return result;
     }
     
+    public List<StringLocation> getLocationsInline(Location loc) {
+      
+      List<StringLocation> locs = new ArrayList<StringLocation>();
+      for (StringLocation l : this.getLocations()) {
+        if( l.getPage() == loc.getPage()) {
+          locs.addAll(l.getLocationsInline(loc));
+        }
+      }
+      return locs;
+    }
+
+    
     public StringLocation getLocation(int page, int lower, int upper, Location.ALIGNMENT alignment) {
-      for (StringLocation l : locations) {
+      for (StringLocation l : getLocations()) {
         if (page != -1 && l.getPage() == page)
             return l.getLocation(lower, upper, alignment);
       }
       return null;
     }
 
-    public boolean hasPoint(int x, int y)
+    @Override
+    public int getPage()
     {
-      return left < x && x < right && bottom < y && y < top;
-    }
-    
-    public boolean isAbove(ImmutableLocation loc) {
-      return this.getBottom() <= loc.getTop();
-    }
-    
-    public boolean matches(String regex) {
-      return this.toString().trim().matches(regex);
+      return -1;
     }
 
 }

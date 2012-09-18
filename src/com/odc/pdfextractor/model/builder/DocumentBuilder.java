@@ -1,69 +1,94 @@
 package com.odc.pdfextractor.model.builder;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
+
 import com.odc.pdfextractor.Constants;
+import com.odc.pdfextractor.comparator.TopToBottomComparator;
 import com.odc.pdfextractor.model.CharacterLocation;
 import com.odc.pdfextractor.model.DocumentLocation;
-
+import com.odc.pdfextractor.model.Location;
+import com.odc.pdfextractor.model.StringLocation;
 public class DocumentBuilder
 {
-  
-  private StringLocationBuilder word;
-  private StringLocationBuilder text;
-  private StringLocationBuilder page;
-  private DocumentLocation doc;
+  private Comparator<Location> topToBottom = new TopToBottomComparator();
+  private ArrayList<StringLocation> word;
+  private ArrayList<StringLocation> text;
+  private SortedSet<StringLocation> page;
+  private List<StringLocation> doc = new ArrayList<StringLocation>();
   private int pageNumber;
   private int error;
 
-  public DocumentBuilder(int error) { 
+  public DocumentBuilder(int error, Comparator<Location> comparator) { 
     this.error = error;
-    word = new StringLocationBuilder();
-    text = new StringLocationBuilder();
-    page = new StringLocationBuilder();
-    doc = new DocumentLocation();
+    word = new ArrayList<StringLocation>();
+    text = new ArrayList<StringLocation>();
+    page = new TreeSet<StringLocation>(topToBottom);
   }
   
   public void addCharacter(CharacterLocation charLoc)
   {
     if (charLoc.getCharacter() == ' ') {
-      if (word != null && !word.empty()) {
-          if (word.toString().trim().matches(Constants.dateRegEx) || word.toString().trim().matches(Constants.amountRegEx)) {
-            page.addLocation(text);
-            page.addLocation(word);
-            text = new StringLocationBuilder();
+      if (word != null && !word.isEmpty()) {
+        StringLocation wordLoc = new StringLocation(word);
+          if (wordLoc.toString().trim().matches(Constants.dateRegEx) || wordLoc.toString().trim().matches(Constants.amountRegEx)) {
+            page.add(new StringLocation(text));
+            page.add(wordLoc);
+            text = new ArrayList<StringLocation>();
           } else {
-            text.addLocation(word);
+            text.add(wordLoc);
           }
       }
-      word = new StringLocationBuilder();
+      word = new ArrayList<StringLocation>();
       return;
     }
 
-    if (word.empty() && (text.isAbove(charLoc) || charLoc.isAbove(text))) {
+    if (word.isEmpty() && (isAbove(text, charLoc) || isUnder(text, charLoc))) {
       addWord();
-    } else if (!word.empty() &&  (word.isAbove(charLoc) || charLoc.isAbove(word))) {
+    } else if(word.isEmpty() && !text.isEmpty() && text.get(text.size() -1).getRight() + error < charLoc.getLeft()) {
       addWord();
-    } else if (!word.empty() && word.getRight() + error < charLoc.getLeft()) {
+    } else if (!word.isEmpty() &&  (isAbove(word, charLoc) ^ isUnder(word, charLoc))) {
+      addWord();
+    } else if (!word.isEmpty() && word.get(word.size() -1).getRight() + error < charLoc.getLeft()) {
       addWord();
     }
-    word.addLocation(charLoc);
+    word.add(charLoc);
+  }
+  
+  private boolean isAbove(List<? extends StringLocation> loc1, CharacterLocation loc2)
+  {
+    if (loc1.isEmpty()) {
+      return false;
+    }
+    return loc1.get(loc1.size() - 1).getBottom() <= loc2.getTop();
+  }
+  
+  private boolean isUnder(List<? extends StringLocation> loc1, StringLocation loc2) {
+    if (loc1.isEmpty()) {
+      return false;
+    }
+    return loc2.getBottom() <= loc1.get(loc1.size() -1).getTop();
   }
 
   private void addWord()
   {
-    if (!word.empty()) {
-      text.addLocation(word);
-      word = new StringLocationBuilder();
-    } if (!text.empty()) {
-      page.addLocation(text);
-      text = new StringLocationBuilder();
+    if (!word.isEmpty()) {
+      text.add(new StringLocation(word));
+      word = new ArrayList<StringLocation>();
+    } if (!text.isEmpty()) {
+      page.add(new StringLocation(text));
+      text = new ArrayList<StringLocation>();
     }
   }
   
   public void incrementPage() {
     pageNumber++;
     addWord();
-    doc.addLocation(page.toLocation());
-    page = new StringLocationBuilder();
+    doc.add(new StringLocation(page));
+    page = new TreeSet<StringLocation>(topToBottom);
   }
   
   public int getPage() {
@@ -72,7 +97,7 @@ public class DocumentBuilder
   
   public DocumentLocation getDoc()
   {
-    return doc;
+    return new DocumentLocation(doc);
   }
   
 }
