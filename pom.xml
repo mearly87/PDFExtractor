@@ -1,0 +1,117 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.odc.pdfextractor</groupId>
+  <artifactId>pdfextractor</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>document-generator</name>
+  <url>http://maven.apache.org</url>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+
+    <dependencies>
+<dependency>
+    <groupId>org.apache.pdfbox</groupId>
+    <artifactId>pdfbox</artifactId>
+    <version>1.7.1</version>
+</dependency>
+    
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+
+
+<distributionManagement>
+    <snapshotRepository>
+        <id>build.ondeck.local</id>
+        <name>build.ondeck.local-snapshots</name>
+        <url>https://build.ondeck.local/artifactory/ondeckcapital-snapshot</url>
+    </snapshotRepository>
+    <repository>
+        <id>build.ondeck.local</id>
+        <name>build.ondeck.local-releases</name>
+        <url>https://build.ondeck.local/artifactory/ondeckcapital-release</url>
+    </repository>
+</distributionManagement>
+
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <id>Ubuntu-releases</id>
+            <name>Ubuntu-releases</name>
+            <url>https://build.ondeck.local/artifactory/ondeckcapital-release</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <id>Ubuntu</id>
+            <name>Ubuntu-snapshots</name>
+            <url>https://build.ondeck.local/artifactory/ondeckcapital-snapshot</url>
+        </repository>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>repo</id>
+            <name>repo</name>
+            <url>https://build.ondeck.local/artifactory/repo</url>
+        </repository>
+    </repositories>
+  
+    <pluginRepositories>
+        <pluginRepository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>central</id>
+            <name>plugins-release</name>
+            <url>https://build.ondeck.local/artifactory/plugins-release</url>
+        </pluginRepository>
+        <pluginRepository>
+            <snapshots />
+            <id>snapshots</id>
+            <name>plugins-snapshot</name>
+            <url>https://build.ondeck.local/artifactory/plugins-snapshot</url>
+        </pluginRepository>
+    </pluginRepositories> 
+    
+    <build>
+        <resources>
+        <resource>
+            <directory>src/main/resources</directory>
+        </resource>
+    </resources>
+    
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.1</version>
+        <configuration>
+          <source>1.7</source>
+          <target>1.7</target>
+        </configuration>
+      </plugin>
+    </plugins> 
+    </build>
+    
+</project>
